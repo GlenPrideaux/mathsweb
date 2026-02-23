@@ -1,0 +1,203 @@
+<!DOCTYPE html >
+  <head>
+<title>Numbers</title>
+<style type="text/css">
+body {
+  text-align: center;
+  font-size: 16pt;
+  color: navy;
+  background-color: rgb(192, 224, 255);
+}
+label.progressive {
+  font-size: 12pt;
+}
+table {
+  margin-left: auto; 
+  margin-right: auto;
+  background-color: blue;
+}
+tr {
+  height: 70pt;
+}
+td {
+  width: 100pt;
+  border: solid 1px black;
+  font-size: 60pt;
+  color: black;
+  background-color: white;
+}
+td#target {
+  width: 200pt;
+  font-size: 90pt;
+}
+div#progress p {
+font-size: 65%;
+margin: 0;
+line-height: 1.5;
+color: black;
+}
+.marching-ants {
+    display: inline-block;
+    padding: 20px;
+    font-size: 16px;
+    color: black;
+    border: 2px dashed black; /* Dashed border for the ants */
+    background: repeating-linear-gradient(
+        90deg,
+        black 0%,
+        black 25%,
+        white 25%,
+        white 50%
+    ); /* Pattern to simulate ants */
+    background-size: 10px 10px; /* Adjust size of the ants */
+    animation: ants 1s linear infinite;
+}
+
+@keyframes ants {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 10px 0; /* Shift the background horizontally */
+    }
+}
+</style>
+<script src="numbers_solver.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+var LargeList = new Array(25, 50, 75, 100);
+var SmallList = new Array(1,1, 2,2, 3,3, 4,4, 5,5, 6,6, 7,7, 8,8, 9,9, 10,10);
+var Maximum = 999
+var Minimum = 100
+
+function clearSolution() {
+    const solution = document.getElementById('solution');
+    const progressDiv = document.getElementById('progress');
+    progressDiv.innerHTML = "";
+    solution.textContent = "";
+}
+
+function gup( name )
+{
+  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  var regex = new RegExp( regexS );
+  var results = regex.exec( window.location.href );
+  if( results == null )
+    return "";
+  else
+    return results[1];
+}
+if(gup("max")>"") Maximum=parseInt(gup("max"));
+if(gup("min")>"") Minimum=parseInt(gup("min"));
+
+function ShowLargeList(id) {
+  var target=document.getElementById(id);
+  target.innerHTML=LargeList[0]+", "+LargeList[1]+", "+LargeList[2]+" and "+LargeList[3];  
+}
+function ShowTargetRange(id) {
+  var target=document.getElementById(id);
+  target.innerHTML="Target "+Minimum+"-"+Maximum;
+}
+function SetNSmall() {
+  var nlarge=document.getElementById("nlarge");
+  var nsmall=document.getElementById("nsmall");
+  nsmall.value=6-nlarge.value;
+}
+function confused(a,b) {
+  return Math.random()-0.5;
+}
+function Shuffle() {
+  LargeList.sort(confused);
+  SmallList.sort(confused);
+}
+function GetNumbers() {
+  var nlarge=document.getElementById("nlarge").value;
+  document.getElementById("getnumbers").disabled=true;
+  Shuffle();
+  for(i=0; i<6; i++) {
+    var box=document.getElementById("n"+i);
+    if(i<nlarge) {
+      box.innerHTML=LargeList[i];
+    } else {
+      box.innerHTML=SmallList[i];
+    }
+  }
+  document.getElementById("gettarget").disabled=false;
+}
+function GetTarget() {
+  document.getElementById("gettarget").disabled=true;
+  var box=document.getElementById("target");
+  box.innerHTML=Math.floor(Math.random()*(Maximum-Minimum+1))+Minimum;
+  document.getElementById("clear").disabled=false;
+  document.getElementById("solveButton").disabled=false;
+  document.getElementById("solveAllButton").disabled=false;
+}
+function Clear() {
+  document.getElementById("getnumbers").disabled=false;
+  document.getElementById("clear").disabled=true;
+  document.getElementById("solveButton").disabled=true;
+  document.getElementById("solveAllButton").disabled=true;
+  document.getElementById("solution").textContent="";
+  document.getElementById("target").innerHTML="&nbsp;"
+  for(i=0; i<6; i++) {
+    document.getElementById("n"+i).innerHTML="&nbsp;";
+  }
+  clearSolution();
+}
+//]]>
+</script>
+
+</head>
+<body>
+<h1>Numbers</h1>
+<p style="font-size:60%;"><strong>Large</strong> numbers are <span id="largelist"></span>.
+<strong>Small</strong> numbers are 1 to 10.</p>
+<p>Choose: 
+  <select id="nlarge" onchange="SetNSmall();">
+    <option value="0" selected="selected">0</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select> 
+Large and 
+<input type="text" maxlength="1" id="nsmall" value="6" size="1" readonly="readonly"/> 
+Small.
+<input type="button" value="Get numbers" onclick="GetNumbers()" id="getnumbers"/></p>
+<table>
+<tr>
+<td id="n0">&nbsp;</td>
+<td id="n1">&nbsp;</td>
+<td id="n2">&nbsp;</td>
+<td id="n3">&nbsp;</td>
+<td id="n4">&nbsp;</td>
+<td id="n5">&nbsp;</td>
+</tr>
+</table>
+<p><input type="button" value="Get target" onclick="GetTarget()" disabled="disabled" id="gettarget"/></p>
+<table>
+<tr>
+<td id="target">&nbsp;</td>
+</tr>
+</table>
+<p style="font-size:60%;" id="trange"></p>
+<p><input type="button" value="Solve" id="solveButton" disabled="disabled"
+/>
+<input type="button" value="Solve All" id="solveAllButton" disabled="disabled"
+/>
+<label class="progressive">
+    <input type="checkbox" id="showProgressiveAttempts"> Show progressive attempts
+</label>
+<input type="button" value="Clear" onclick="Clear()" id="clear"
+  disabled="disabled" /> <span class="marching-ants" id="solving"
+style="visibility: hidden;">SOLVING</span></p>
+<div id="progress" style="display:none;"></div><div id="solution"></div>
+<script type="text/javascript">
+ShowLargeList("largelist");
+ShowTargetRange("trange");
+document.getElementById("nlarge").value=2;
+document.getElementById("nsmall").value=4;
+</script>
+</body>
+</html>

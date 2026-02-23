@@ -1,0 +1,176 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+* {
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+}
+
+body {
+    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
+    font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+    font-size:16px;
+    height:100%;
+    margin:0px;
+    padding:0px;
+    width:100%;
+}
+
+/* Portrait layout for phone (default) */
+div#app {
+    height:100%;                   /* text area height */
+    width:100%;                   /* text area width */
+    text-align:center;
+    padding:5px;
+}
+div#instructions {
+    display:none;
+}
+
+@media screen and (min-width:740px) and (orientation: landscape){
+    div#app {
+        position:relative;             /* position in the center of the screen */
+        height:90%;                   /* text area height */
+        left:50%;
+	width:400px;
+	margin-left:-200px;
+        text-align:center;
+	margin-top:20px;              /* offset vertical: half of image height */
+    }
+    div#wrapper {
+	margin-left:300px;
+    }
+    div#instructions {
+        /* background:url(./logo.png) no-repeat left top; /* 170px x 200px */
+	display:block;
+	position:absolute;
+	top:0px;
+	padding-top:180px;
+	height:90%
+	left:100px;
+	margin-left:20px;
+	width: 260px;
+	font-size:90%;
+	color: RGB(32,32,80);
+    }
+}
+
+h2 {
+    font-weight:normal;
+}
+h1 {
+    font-weight:normal;
+    margin:0px;
+    overflow:visible;
+    padding:0px;
+    text-align:center;
+    font-size:24pt;
+}
+math {
+    font-size:120%;
+}
+div#buttons p {
+    margin:3pt;
+    text-align:center;
+}
+div#io {
+    display:none;
+}
+div#rule {
+    display:none;
+    margin-left:auto;
+    margin-right:auto;
+    width:auto;
+    font-size:14pt;
+}
+div#rule p{
+    text-align:center;
+}
+table {
+    margin-left:auto;
+    margin-right:auto;
+}
+input#calculate {
+    width:6em;
+}
+input#giveup {
+    display:none;
+}
+input#in,input#out {
+    width:4em;
+}
+td {
+    text-align:center;
+}
+body {
+    background-image:url(bg.png);
+    background-repeat:repeat;
+}
+input {
+font-size:100%;
+}
+
+img#nm {
+    position: absolute;
+    left: 50%;
+    margin-left: -76px;
+    top: 60px;
+    z-index:5; 
+}
+div#nmInput {
+    position: absolute;
+    width: 48px;
+    height: 30px;
+    left: 50%;
+    top: 20px;
+    margin-left: -63px;
+    font-size: 15pt;
+    font-family: "Lucida Handwriting","Palatino Linotype", "Book Antiqua", Palatino, serif;
+    text-align:center;
+}
+div#nmOutput {
+    position: absolute;
+    width: 48px;
+    height: 30px;
+    left: 50%;
+    top: 168px;
+    margin-left: 13px;
+    font-size: 15pt;
+    font-family: "Lucida Handwriting","Palatino Linotype", "Book Antiqua", Palatino, serif;
+    text-align:center;
+    transform: scaleX(0.25) translateY(-40px);
+    -moz-transform: scaleX(0.25) translateY(-40px);
+    -webkit-transform: scaleX(0.25) translateY(-40px);
+    -o-transform: scaleX(0.25) translateY(-40px);
+    -ms-transform: scaleX(0.25) translateY(-40px);
+}
+.transition {
+    transition: transform 0.5s ease-in;
+    -moz-transition: -moz-transform 0.5s; /* Firefox 4 */
+    -webkit-transition: -webkit-transform 0.5s; /* Safari and Chrome */
+    -o-transition: -o-transform 0.5s; /* Opera */
+    -ms-transition: -ms-transform 0.5s; /* Firefox 4 */
+}
+.noTransition {
+    transition: none;
+    -moz-transition: none;
+    -webkit-transition: none;
+    -o-transition: none;
+    -ms-transition: none;
+}

@@ -1,0 +1,92 @@
+/* -*- Mode: C; tab-width: 1; indent-tabs-mode: nil; c-basic-offset: 1 -*- */
+
+/* base stylesheet */
+
+body {
+ color:black;
+ background-color:#FE6;
+ font-family:sans-serif;
+ margin:0em;
+}
+
+h1 {
+ text-align:center;
+}
+
+a:link {
+ color:blue;
+}
+
+a:visited {
+ color:#808;
+}
+
+a:active {
+ color: red;
+ background-color:white;
+}
+
+a:hover {
+ color:blue;
+ background-color:white;
+}
+
+.return {
+    font-size:smaller;
+}
+
+.modified {
+    text-align:right;
+    font-style: italic;
+    font-size:smaller;
+}
+
+.bibliography {
+    margin-left: 2cm;
+    margin-right: 1cm;
+    text-indent: -1cm;
+}
+
+.nb {
+    font-size: smaller;
+    font-style: italic;
+}    
+
+.caption {
+ margin: 0pt 4pt;
+ font-style: italic;
+}
+
+.nav {
+ margin-left:0;
+ margin-right:0;
+ color:white;
+ background-color:black;
+ font-size:90%;
+ text-align:center;
+ clear:both;
+}
+a:link.nav {
+ color: white;
+ background-color:black;
+}
+a:visited.nav {
+ color:white;
+ background-color:black;
+}
+
+a:active.nav {
+ color: white;
+ background-color:black;
+}
+
+a:hover.nav {
+ color:blue;
+ background-color:white;
+}
+
+.super {
+ font-size:70%; 
+ position:relative; 
+ top:-0.5em;
+}

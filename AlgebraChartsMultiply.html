@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Albegra Charts after Maths300 lesson 160</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="interactive.css">
+<link rel="stylesheet" href="mathquill-0.10.1/mathquill-basic.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="mathquill-0.10.1/mathquill-basic.js"></script>
+<script>
+var MQ = MathQuill.getInterface(2);
+</script>
+<style>
+input.el, div.el, td.el {
+    font-size: 1.6vw;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>Algebra Charts (multiplication)</h1>
+<p>Enter \(x^2\) as x^2. Press Enter to check your answer.</p>
+<!-- This is version 1.1 -- like the Maths300 lesson. -->
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p class="congrats">Congratulations, you&rsquo;ve solved it!</p>
+  </div>
+
+</div>
+<div class="controls">
+  <input type="radio" name="difficulty" value="1" checked="checked">Easiest</input>
+<input type="radio" name="difficulty" value="2">Medium</input>
+<input type="radio" name="difficulty" value="3">Hardest</input>
+<!-- br -->
+<input type="submit" onclick="blankAlgChart()" value="Fill-in chart"/>
+<input type="submit" onclick="algPuzzle()" value="Puzzle"/>
+</div>
+
+<div id="chart">
+</div>
+
+<div id="cc">Interactive worksheet by Glen Prideaux. <br />
+<a rel="license"
+  href="http://creativecommons.org/licenses/by-nc/4.0/"><img
+  alt="Creative Commons License" style="border-width:0"
+  src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
+  This work is licensed under a <a rel="license"
+  href="http://creativecommons.org/licenses/by-nc/4.0/">Creative
+  Commons Attribution-NonCommercial 4.0 International
+  License</a>. (Uses the <a href="http://mathquill.com/">MathQuill</a>
+  and <a href="https://jquery.com/">jQuery</a> libraries that have
+  their own licences.)
+</div>
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script type="text/javascript" src="interactive-quill.js">
+</script>
+<script type="text/javascript" src="algebrachartmultiply.js">
+</script>
+
+</body>
+</html>

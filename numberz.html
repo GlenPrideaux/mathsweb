@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+<title>Numbers</title>
+<style type="text/css">
+body {
+  text-align: center;
+  font-size: 16pt;
+  color: navy;
+  background-color: rgb(192, 224, 255);
+}
+table {
+  margin-left: auto; 
+  margin-right: auto;
+  background-color: blue;
+}
+tr {
+  height: 70pt;
+}
+td {
+  width: 100pt;
+  border: solid 1px black;
+  font-size: 60pt;
+  color: black;
+  background-color: white;
+}
+td#target {
+  width: 200pt;
+  font-size: 90pt;
+}
+</style>
+<script type="text/javascript">
+//<![CDATA[
+var LargeList = new Array(20, 50, 100, 200);
+var SmallList = new Array(1,1, 2,2, 3,3, 4,4, 5,5, 6,6, 7,7, 8,8, 9,9, 10,10);
+var Maximum = 999
+var Minimum = 100
+function gup( name )
+{
+  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  var regex = new RegExp( regexS );
+  var results = regex.exec( window.location.href );
+  if( results == null )
+    return "";
+  else
+    return results[1];
+}
+if(gup("max")>"") Maximum=parseInt(gup("max"));
+if(gup("min")>"") Minimum=parseInt(gup("min"));
+
+function ShowLargeList(id) {
+  var target=document.getElementById(id);
+  target.innerHTML=LargeList[0]+", "+LargeList[1]+", "+LargeList[2]+" and "+LargeList[3];  
+}
+function ShowTargetRange(id) {
+  var target=document.getElementById(id);
+  target.innerHTML="Target "+Minimum+"-"+Maximum;
+}
+function SetNSmall() {
+  var nlarge=document.getElementById("nlarge");
+  var nsmall=document.getElementById("nsmall");
+  nsmall.value=6-nlarge.value;
+}
+function confused(a,b) {
+  return Math.random()-0.5;
+}
+function Shuffle() {
+  LargeList.sort(confused);
+  SmallList.sort(confused);
+}
+function GetNumbers() {
+  var nlarge=document.getElementById("nlarge").value;
+  document.getElementById("getnumbers").disabled=true;
+  Shuffle();
+  for(i=0; i<6; i++) {
+    var box=document.getElementById("n"+i);
+    if(i<nlarge) {
+      box.innerHTML=LargeList[i];
+    } else {
+      box.innerHTML=SmallList[i];
+    }
+  }
+  document.getElementById("gettarget").disabled=false;
+}
+function GetTarget() {
+  document.getElementById("gettarget").disabled=true;
+  var box=document.getElementById("target");
+  box.innerHTML=Math.floor(Math.random()*(Maximum-Minimum+1))+Minimum;
+  document.getElementById("clear").disabled=false;
+}
+function Clear() {
+  document.getElementById("getnumbers").disabled=false;
+  document.getElementById("clear").disabled=true;
+  document.getElementById("target").innerHTML="&nbsp;"
+  for(i=0; i<6; i++) {
+    document.getElementById("n"+i).innerHTML="&nbsp;";
+  }
+}
+//]]>
+</script>
+</head>
+<body>
+<h1>Numbers</h1>
+<p style="font-size:60%;"><strong>Large</strong> numbers are <span id="largelist"></span>.
+<strong>Small</strong> numbers are 1 to 10.</p>
+<p>Choose: 
+  <select id="nlarge" onchange="SetNSmall();">
+    <option value="0" selected="selected">0</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select> 
+Large and 
+<input type="text" maxlength="1" id="nsmall" value="6" size="1" readonly="readonly"/> 
+Small.
+<input type="button" value="Get numbers" onclick="GetNumbers()" id="getnumbers"/></p>
+<table>
+<tr>
+<td id="n0">&nbsp;</td>
+<td id="n1">&nbsp;</td>
+<td id="n2">&nbsp;</td>
+<td id="n3">&nbsp;</td>
+<td id="n4">&nbsp;</td>
+<td id="n5">&nbsp;</td>
+</tr>
+</table>
+<p><input type="button" value="Get target" onclick="GetTarget()" disabled="disabled" id="gettarget"/></p>
+<table>
+<tr>
+<td id="target">&nbsp;</td>
+</tr>
+</table>
+<p style="font-size:60%;" id="trange"></p>
+<p><input type="button" value="Clear" onclick="Clear()" id="clear"
+  disabled="disabled" /></p>
+
+<script type="text/javascript">
+ShowLargeList("largelist");
+ShowTargetRange("trange");
+document.getElementById("nlarge").value=2;
+</script>
+</body>
+</html>

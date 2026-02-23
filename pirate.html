@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pirate Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #main-container {
+            transform-origin: top left;
+            width: 900px; /* Base width for scaling */
+            height: 600px; /* Base height for scaling */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid black;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .crossed {
+            text-decoration: line-through;
+            background-color: #f4a460;
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 6em;
+            text-align: center;
+        }
+
+        #alertBox, #confirmBox {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            padding: 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #alertBox {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #confirmBox {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        #alertBox button, #confirmBox button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #alertBox button {
+            background-color: white;
+            color: #f44336;
+        }
+
+        #confirmBox button {
+            background-color: white;
+            color: #2196f3;
+        }
+
+        #crossedOutList {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+}
+button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+button#resetButton:not(:disabled) {
+  background-color: red;
+  color: white;
+}
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <h1>The Pirate Game</h1>
+        <div style="display: flex; flex-direction: row;">
+            <div>
+                <table id="pirateTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                            <th>E</th>
+                            <th>F</th>
+                            <th>G</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows and columns are dynamically generated -->
+                    </tbody>
+                </table>
+                <div>
+                    <div>
+                        <button id="randomSelectButton">Randomly Select Square</button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label for="column">Column: </label>
+                        <select id="column">
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="G">G</option>
+                        </select>
+                        <label for="row">Row: </label>
+                        <select id="row">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                        <button id="crossOutButton">Cross Out</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-left: 20px;">
+                <h3>Crossed Out Squares</h3>
+                <div id="crossedOutList"></div>
+            </div>
+            <div style="margin-left: 20px;">
+                <h3>Choose Queue</h3>
+                <div>
+                    <input type="text" id="nameInput" placeholder="Enter name">
+                    <button id="addNameButton">Add Name</button>
+                </div>
+                <ul id="nameList" style="list-style-type: none; padding: 0; margin-top: 10px;"></ul>
+                <div style="margin-top: 20px;">
+                    <button id="resetButton" disabled>Reset</button>
+                    <button id="undoButton" disabled>Undo</button>
+                    <button id="redoButton" disabled>Redo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Box -->
+    <div id="alertBox">
+        <span id="alertMessage"></span>
+        <button id="closeAlertButton">OK</button>
+    </div>
+
+    <!-- Custom Confirmation Box -->
+    <div id="confirmBox">
+        <span id="confirmMessage"></span>
+        <div style="margin-top: 10px;">
+            <button id="confirmYesButton">Yes</button>
+            <button id="confirmNoButton">No</button>
+        </div>
+    </div>
+
+    <script>
+        function adjustScale() {
+            const container = document.getElementById('main-container');
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Get the dimensions of the container
+            const contentWidth = container.offsetWidth;
+            const contentHeight = container.offsetHeight;
+
+            // Calculate scaling factors for width and height
+            const scaleX = viewportWidth / contentWidth;
+            const scaleY = viewportHeight / contentHeight;
+
+            // Use the smaller scaling factor to fit both dimensions
+            const scale = Math.min(scaleX, scaleY);
+
+            // Apply the scaling to the container
+            container.style.transform = `scale(${scale})`;
+        }
+
+        // Adjust scale on load and resize
+        window.addEventListener('load', adjustScale);
+        window.addEventListener('resize', adjustScale);
+    </script>
+    <script src="pirate.js" defer></script>
+</body>
+</html>

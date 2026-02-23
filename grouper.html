@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html> <head>
+    <title>Grouper</title>
+    
+<script>
+function act() {
+    var size=document.getElementById("size");
+    var h=document.getElementById("heading");
+    var adjup = document.getElementById("updown").value=="1";
+    document.getElementById("input_only").style.display = "none";
+    document.getElementById("output_only").style.display = "block";
+    fillGroups(getNames(cl),size.value,adjup);
+    h.innerText="Groups of "+size.value+" (or "+(adjup?(1+Number(size.value)):(size.value-1))+")";
+}
+function act1() {
+    var nGroups=document.getElementById("ngroups");
+    var h=document.getElementById("heading");
+    document.getElementById("input_only").style.display = "none";
+    document.getElementById("output_only").style.display = "block";
+    fillNGroups(getNames(cl),nGroups.value);
+    h.innerText=numberToWords(nGroups.value)+" groups";
+}
+function getNames(cl) {
+    names=cl.value.replace(/\n\t/g,'\n').replace(/\r\n\r\n/g,"\r\n").replace(/\t/g,", ").split(/\r?\n|\r|\n/g);
+    while(names[names.length-1]=='') names.pop();
+    return names;
+}
+function preNumber(names, nGroups) {
+      const aveGroupSize=names.length/nGroups;
+      var letters=shuffle(String("abcdefghijklmnopqrstuvwxyz").substring(0,nGroups));
+      while(!checkProhibitions(names,letters)) {
+	console.log("preNumber: Prohibitions clash ... reshuffling.");
+	letters=shuffle(letters);
+      }
+    // ugh ... incompatible restrictions could result in an infinite loop here.
+  const groups = [];
+  const groupSize = [];
+  for(let i=0; i<names.length; i++) {
+      [namePlus,name,colonNumber,number,proh]=names[i].match(/([^:\/]+)(:([^\/]*))?\/?(.*)/);
+      if (undefined === number) {
+	number=0;
+	//console.log("preNumber: unallocated: "+namePlus);
+      }
+      if(number[0]>='a') {
+	number=letters.indexOf(number)+1;
+	console.log("preNumber: letter group "+letters[number-1]+" ("+number+"):"+namePlus);
+      } else {
+	if(proh>"") { // if we have a prohibition, allocate it now so it doesn't accidentally get into that group
+	  // (we don't have to worry if a letter group is also allocated since we check that when shuffling the letters)
+	  // We need to ensure it's not the prohibited group AND that the group isn't already full
+	  do{
+	    number = Math.floor(Math.random() * nGroups + 1);
+	    var groupMax=Math.ceil((number)*aveGroupSize)-Math.ceil((number-1)*aveGroupSize);
+	  } while(number==proh || (null!=groups[number]&&groups[number].length>=groupMax));
+	}
+	number=Math.min(number,nGroups);
+	if(number>0) console.log("preNumber: number group "+number+":"+namePlus);
+      }
+      if (null == groups[number])
+	groups[number]=[name];
+      else
+	groups[number].push(name);
+      }
+      console.log("======= preNumber success =======");
+  return groups;
+}
+function checkProhibitions(names, letters) {
+  for(let i=0; i<names.length; i++) {
+    [namePlus,name,colonNumber,number,proh]=names[i].match(/([^:\/]+)(:([^\/]*))?\/?(.*)/);
+    if(number!==undefined && proh>"" && letters[proh-1]==number) return false;
+  }
+  return true;
+}
+function shuffle(input) {
+    // Determine the type of the input
+    let isArray = Array.isArray(input);
+    // Convert input to an array if it is a string
+    let array = isArray ? input : input.split('');
+    
+    // Implementing the Fisher-Yates shuffle for the array
+    for (let i = array.length - 1; i > 0; i--) {
+        // Pick a random index from 0 to i
+        const j = Math.floor(Math.random() * (i + 1));
+        
+        // Swap elements array[i] and array[j]
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+
+    // If the original input was a string, convert the array back to a string
+    return isArray ? array : array.join('');
+}
+
+function fillGroups(list, size, adjup) {
+      const nGroups=adjup?Math.floor(list.length/size):Math.ceil(list.length/size);
+      return fillNGroups(list,nGroups);
+}
+function fillNGroups(list, nGroups) {
+    var indent=false;
+    var grouped="";
+    var op=document.getElementById("op");
+    op.innerHTML="";
+
+    const groups=preNumber(list,nGroups);
+    // shuffle the unallocated
+    groups[0]=shuffle(groups[0]);
+    aveGroupSize=list.length/nGroups;
+    for(groupNumber=1; groupNumber<=nGroups; groupNumber++) {
+	var groupMax=Math.ceil((groupNumber)*aveGroupSize)-Math.ceil((groupNumber-1)*aveGroupSize);
+	// make sure the group is defined
+	if (null==groups[groupNumber])
+	    groups[groupNumber]=[];
+	// fill the group from the unallocated
+	while (groups[groupNumber].length<groupMax)
+	    groups[groupNumber].push(groups[0].pop());
+	
+	var art = document.createElement("article");
+	art.innerHTML="<h2>Group "+(groupNumber)+"<h2>";
+	var ul = document.createElement("ul");
+	art.appendChild(ul);
+	for(var i=0; i<groups[groupNumber].length; i++) {
+	    if(indent) grouped+="\t";
+	    grouped+=groups[groupNumber][i];
+	    grouped+="\r\n";
+	    var li=document.createElement("li");
+	    li.innerText=groups[groupNumber][i];
+	    ul.appendChild(li);
+	}
+	op.appendChild(art);
+	indent=!indent;
+    }
+	    
+    return grouped;
+
+}
+
+function group(list, size,adjup) {
+    // do we want to adjust up?
+    var indent=false;
+    var grouped="";
+    var op=document.getElementById("op");
+    op.innerHTML="";
+    nGroups=adjup?Math.floor(list.length/size):Math.ceil(list.length/size);
+    aveGroupSize=list.length/nGroups;
+    for(groupNumber=0; groupNumber<nGroups; groupNumber++) {
+	var art = document.createElement("article");
+	art.innerHTML="<h2>Group "+(groupNumber+1)+"<h2>";
+	var ul = document.createElement("ul");
+	art.appendChild(ul);
+	// fill in any forced
+	for(idx=Math.ceil(groupNumber*aveGroupSize); idx<Math.ceil((groupNumber+1)*aveGroupSize); idx++) {
+	    if(indent) grouped+="\t";
+	    grouped+=list[idx];
+	    if(idx<list.length-1) grouped+="\r\n";
+	    var li=document.createElement("li");
+	    li.innerText=list[idx];
+	    ul.appendChild(li);
+	}
+	op.appendChild(art);
+	indent=!indent;
+    }
+	    
+    return grouped;
+}
+
+function numberToWords(num) {
+    const under20 = ['Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                     'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+
+      if (num < 20) return under20[num-2]; else return 'Twenty';
+}
+
+</script>
+<style>
+section {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1 200px;
+}
+span.output_only {
+    display: none;
+}
+article {
+    padding: 10px; margin: 10px; background: antiquewhite; min-width: 200px;
+    border: ridge 6px cornflowerblue;
+    border-radius: 15px;
+}
+h2 { text-align:center; }
+
+</style>
+</head>
+
+<body>
+<h1 id="heading">Paste class list</h1>
+<span id="input_only">
+  <textarea id="cl" cols="40" rows="32"></textarea>
+  <div style="font-size:80%">Enter comma or tab delimited names. You
+  have some control over where students are placed:<ul><li>Bloggs, Joe:2 (for example)
+  will force Joe to group 2.</li><li>Smith, Sally:a  and  Starr, Ringo:a  will
+  force Sally and Ringo into the same (randomly numbered)
+  group</li><li>Hawking, Stephen:b  and  Einstein, Albert:c will make sure Stephen and
+  Albert are in different groups (and also different from Sally and Ringo)</li><li>Astair:Fred/4 means do not put Fred
+  in group 4.</li><li>You can combine letter preferences with number
+  prohibitions like this: Cooper, Gary:a/2. That would put Gary in
+  group a (with Sally and Ringo) while making sure that group a was
+  not the second group. (You cannot use letter prohibitions; just use
+  a different letter.) Note that using too many of these combinations might
+  make a solution impossible.</li></ul>If you specify a group number larger
+  than the number of groups created, the person will go to the last
+  group. If you specify a letter that falls too late in the alphabet
+  it will be ignored.</div>
+</span>
+    <label for="size" id="sizelbl">Group size:</label>
+    <input type="number" id="size" min="2" max="6" value="3" size="2">
+    <select id="updown"><option value="0" selected>adjust down</option><option value="1">adjust up</option></select>
+<input type="button" id="act" onclick="act()" value="Make groups this size">
+<label for="ngroups" id="ngroupslbl">&nbsp;OR &nbsp;Number of groups:</label>
+    <input id="ngroups" type="number" min="2" max="20" value="8" size="3">
+<input type="button" id="act1" onclick="act1()" value="Make this many groups">
+<span id="output_only">
+<section id="op">
+</section>
+</span>
+<hr>
+<address></address>
+<!-- hhmts start -->Last modified: Thu Dec  8 14:59:43 AWST 2022 <!-- hhmts end -->
+</body> </html>

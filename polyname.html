@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PolyName</title>
+    <script src="math.js" type="text/javascript"></script>
+    <script type="text/javascript" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=AM_CHTML"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript">
+getName = function() {
+    var nameControl = document.getElementById("namecontrol");
+    var name = nameControl.value;
+    return name.replace(/[^A-Za-z]/,"@").toUpperCase()
+}
+putOutput = function(text,id) {
+    var outputControl = document.getElementById(id);
+    outputControl.innerHTML = text;
+}
+stringToNumbers = function(c) {
+    var l = c.length;
+    var codes = [];
+    for(i=0; i<l; i++) codes.push(c.charCodeAt(i)-64);
+    return codes;
+}
+buildMatrix = function(len) {
+    /* row number: base; column number: index */
+    var M = [];
+    for(i=1; i<=len; i++) {
+	var r = [];
+	var n = 1;
+	for(j=0; j<len; j++) {
+	    r.push(math.fraction(n,1));
+	    n *= i;
+	}
+	M.push(r);
+    }
+    return math.matrix(M);
+}
+
+trimCoeff = function(coeff) { // trim any trailing zeros
+    while(coeff.length>1 && coeff[coeff.length-1].n==0)
+	coeff.length -=1;
+    return coeff;
+}
+poly = function(coeff) {
+    var poly="";
+    var expanded="";
+    var degree=coeff.length-1;
+    var open = "";
+    var joiner = "";
+    var len = 0;
+    math.forEach(coeff, function(val, idx, mat) {
+	if(val.n!=0) len = idx[0]+1;
+    });
+    math.forEach(coeff, function(val, idx, mat) {
+	expanded = (idx>0?(idx>1?"x^".concat(idx):"x"):"").concat(joiner).concat(expanded);
+	// treat the last differently
+	if(idx<len-1) {
+	    // treat the first differently
+	    if(idx>0) {
+		open = "x(".concat(open);
+		poly = ")".concat(joiner).concat(poly);
+	    }
+	    if(val>0) joiner="+"; else joiner="";
+	    if(val.n!=0) {
+		if(val.d==1) {
+		    poly=math.format(val, {fraction: 'decimal'}).concat(poly);
+		    expanded=math.format(val, {fraction: 'decimal'}).concat(expanded);
+		} else {
+		    poly=math.format(val,{fraction: 'ratio'}).concat(poly);
+		    expanded=math.format(val, {fraction: 'ratio'}).concat(expanded);		}
+	    }
+	} else {
+	    expanded=math.format(val, {fraction: (val.d>1?'ratio':'decimal')}).concat(expanded);
+
+	    if(val.n!=0) {
+		if(val.d!=1) {
+		    var num;
+		    if(val.n==1) num=(idx==0?"1":"x");
+		    else if(idx==0) num = "".concat(val.n)
+		    else num="(".concat(val.n).concat("x)");
+		    open = open.concat((val.s<0?"-":"").concat(num));
+		    open = open.concat("/").concat(val.d);
+		} else {
+		    var num;
+		    if(val.n==1) num=(idx==0?"1":"x")
+		    else {
+			num = "".concat(val.n)
+			if(idx!=0) num = num.concat("x");
+		    }
+		    open = open.concat((val.s<0?"-":"").concat(num));
+		}
+		open = open.concat(joiner);
+	    } 
+	} 
+    });
+
+    return {poly:open.concat(poly), expanded:expanded};
+}
+
+// Function to evaluate a polynomial at a given x
+// coefficients are lowest power of x first
+        function evaluatePolynomial(coefficients, x) {
+            return coefficients.toReversed().reduce((acc, coef, index) => {
+                return acc*x + coef;
+            });
+        }
+    
+maketable = function(name) {
+    var table="<table><tr><th>`x`</th><th colspan=\"2\">`f(x)`</th></tr>";
+    stringToNumbers(name).forEach(function(elt,idx,mat) {
+	table=table.concat("<tr><td>").concat(idx+1).concat("</td>")
+	    .concat("<td>").concat(elt)
+	    .concat("</td><td style=\"font-family:monospace;\">[").concat(name[idx].replace(/@/,"&blank;")).concat("]")
+	    .concat("</td></tr>");
+    });
+    return table.concat("</table>");
+}
+
+const displayCoordinatesPlugin = {
+    id: 'displayCoordinates',
+    afterDatasetsDraw(chart) {
+        const { ctx, data } = chart;
+        const dataset = chart.data.datasets[1];
+        const meta = chart.getDatasetMeta(1);
+        meta.data.forEach((point, index) => {
+            const { x, y } = point.tooltipPosition();
+            const { x: dataX, y: dataY } = dataset.data[index];
+            ctx.save();
+            ctx.fillStyle = 'black';
+            ctx.font = '12px Arial';
+            ctx.fillText(`(${dataX}, ${math.round(dataY*1000)/1000})`, x + 5, y - 10);
+            ctx.restore();
+        });
+    }
+};
+// Function to plot the polynomial
+function plotPolynomial(coefficients, n) {
+    const [start, end]=[0, n+1];
+    // Generate x and y values
+    const step = 0.05; // 20 points between integers for smooth graph
+    const xValues = [];
+    const yValues = [];
+    const xyValues = [];
+    for (let x = start; x <= end; x += step) {
+        xValues.push(x);
+        yValues.push({x: x, y: evaluatePolynomial(coefficients, x)});
+    }
+    for (let x = 1; x <= n; x += 1) {
+        xyValues.push({x:x, y:evaluatePolynomial(coefficients, x)});
+    }
+    
+    // Create or update the chart
+    const ctx = document.getElementById('polynomialChart').getContext('2d');
+    if (window.polynomialChart.destroy) {
+        window.polynomialChart.destroy(); // Destroy previous chart if it exists
+    }
+    window.polynomialChart = new Chart(ctx, {
+        data: {
+	    labels: [...Array(n+2).keys()],
+            datasets: [{
+		type: 'scatter',
+		showLine: true,
+		//labels: xValues,
+		pointStyle: false,
+                //label: 'Polynomial Graph',
+                data: yValues,
+                borderColor: 'blue',
+                borderWidth: 2,
+                fill: false
+            },
+	    {
+		type: 'scatter',
+		pointStyle: "circle",
+                data: xyValues,
+                borderColor: 'blue',
+                borderWidth: 2,
+                fill: false,
+            }]
+        },
+        options: {
+	    plugins: {
+		legend: {
+		    display: false
+		}
+	    },
+	    scales: {
+                x: {
+		    title: {
+                        display: true,
+                        text: 'x'
+		    },
+		    beginAtZero: true,
+		    border: {
+			color: 'red',
+			width: 4
+		    },
+		    position: { y: 0 }
+                },
+                y: {
+		    title: {
+                        display: true,
+                        text: 'y'
+		    },
+		    min: -2,
+		    max: 29
+                }
+	    }
+        },
+	plugins: [displayCoordinatesPlugin] 
+    });
+}
+
+go = function() {
+    math.config({number: 'Fraction'});
+    var name = getName();
+    var Minv = math.inv(buildMatrix(name.length));
+    var nameMat = math.transpose(math.matrix([stringToNumbers(name)]));
+    var coeff = math.multiply(Minv,nameMat);
+    coeff = trimCoeff(math.flatten(coeff).toArray());
+    var thePoly=poly(coeff);
+    putOutput(maketable(name),"outputDiv");
+    putOutput("`f(x)=".concat(thePoly.poly.concat("`")),"math");
+    putOutput("`f(x)=".concat(thePoly.expanded.concat("`")),"expanded");
+    plotPolynomial(coeff, name.length);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"math"]);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"expanded"]);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"outputDiv"]);
+}
+
+    </script>
+  </head>
+  <body>
+    <h1>PolyName</h1>
+    <p>Have you ever wished you could generate your name from a polynomial? Well now you can! Enter your name, and generate a polynomial where the `f(1)` represents the first letter of your name (where 1 maps to A, 2 to B, etc.), `f(2)` gives the second letter, and so on.</p>
+    <input type="text" id="namecontrol" onchange="go();"></input>
+    <div id="math" style="margin:2em;"></div>
+    <div id="expanded" style="margin:2em;"></div>
+    <div id="outputDiv" style="font-size:90%"></div>
+    <canvas id="polynomialChart"  width="800" height="400"></canvas>
+  </body>
+</html>

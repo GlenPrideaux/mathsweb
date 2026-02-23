@@ -1,0 +1,21 @@
+h1 {
+    text-align:center;
+    font-size:16pt;
+}
+div#buttons p {
+    margin:3pt;
+    text-align:center;
+}
+div#io {
+    display:none;
+}
+table {
+    margin-left:auto;
+    margin-right:auto;
+}
+input#calculate {
+    width:6em;
+}
+td {
+    text-align:center;
+}

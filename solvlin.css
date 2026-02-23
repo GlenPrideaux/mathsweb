@@ -1,0 +1,36 @@
+.note {
+    font-size: 85%;
+    color: #888;
+}
+main {
+    padding: 0 6px;
+}
+input.answer {
+    width: 100%;
+    border-width:0;
+    font-size:12pt;
+}
+div.MathJax_Display {
+    margin-bottom:0;
+}
+.answer {
+    width: 100%;
+    border-width:0;
+    border:none;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    font-family: 'PT Sans', sans-serif;
+    width:auto;
+    right: 100%;
+}
+div.answer {
+    height: 64px;
+}
+.problem {
+    font-size: 18px;
+    margin: 6px 0;
+    padding: 2px;
+    color: #333;
+    font-family: 'PT Sans', sans-serif;
+}

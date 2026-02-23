@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Distributive Law Exercises</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="Mathematics.css">
+    <script type="text/javascript" src="MathematicsParser.js"></script>
+    <style type="text/css">
+    .problem {
+        margin: 3px;
+	margin-top:0;
+	display:block;
+	padding: 0;
+	color: #333;
+	font-family: 'PT Sans', sans-serif;
+	font-size: 14px;
+	width:auto;
+	right: 100%;
+    }
+    .answer {
+	margin: 0 3px;
+	min-height: 1em;
+	font-size: 14px;
+    }
+    input.answer {
+	height: auto;
+	min-height: 0;
+	margin-bottom: 0;
+	width:100%;
+    }
+ol {
+    margin: 0;
+    padding: 0;
+    list-style-type:none
+}
+
+    </style>
+</head>
+<body>
+<h1>Distributive Law Exercises</h1>
+<!-- This is version 1.1  -->
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Congratulations, you&rsquo;ve got them all right!</p>
+  </div>
+
+</div>
+<div id="chart">
+</div>
+<input type="radio" name="difficulty" value="1" checked="checked">Easiest</input>
+<input type="radio" name="difficulty" value="2">Medium</input>
+<input type="radio" name="difficulty" value="3">Hardest</input>
+    <br/>
+<input type="radio" name="length" value="1" checked="checked">Single brackets</input>
+<input type="radio" name="length" value="2">Multiple brackets</input>
+<br/>    
+<input type="radio" name="decimals" value="0" checked="checked">Integer coefficients</input>
+<input type="radio" name="decimals" value="1">Decimal coefficients</input>
+<br/>    
+<input type="radio" name="order" value="1" checked="checked">a(b+c)</input>
+<input type="radio" name="order" value="2">(a+b)(c+d)</input>
+<input type="radio" name="order" value="3">Higher order</input>
+<br/>    
+<input type="submit" onclick="prepareProblems()" value="Generate" id="generate"/>
+<div class="problems" id="problems">
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    showProcessingMessages: false,
+    showMathMenu:false,
+    preview: '&nbsp;',
+    "HTML-CSS": {
+	styles: {
+	    ".MathJax_Display": {
+		"text-align": "center",
+		margin:       "0 3px",
+	    },
+	    ".MJXp-display": {
+		margin:       "0 3px",
+		"font-family": "STIXGeneral-Regular",
+		"font-size": "16px",
+	    }
+	}
+    }
+  });
+</script>
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script type="text/javascript" src="distlaw2.js"></script>
+</body>
+</html>

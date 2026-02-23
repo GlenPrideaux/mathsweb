@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html> <head>
+<title>Unit Circle Graph paper generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"
+	integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script -->
+<script>
+    var jsPDF = window.jspdf.jsPDF;
+//    $(document).ready(function() {
+//	if(jsPDF && jsPDF.version) {
+//	    $('#dversion').text('Version ' + jsPDF.version);
+//	}
+//    });
+</script>
+</head>
+
+<body>
+<h1>Unit Circle Graph paper generator</h1>
+<p>When you click 'Generate' this page will generate a two page PDF
+  file containing graph paper to match your specifications. (It
+  generates two pages to facilitate two-sided printing.)</p>
+<form>
+  <div id="griddef">
+    <label to="units">Units:</label>
+    <select id="units">
+      <option value="mm" selected>mm</option>
+      <option value="cm">cm</option>
+      <option value="in">in</option>
+      <option value="pt">pt</option>
+    </select> (tested almost exclusively with mm; all angle measurements
+    in degrees)
+    <br>    
+    <label to="papersize">Paper size:</label>
+    <select id="papersize" onchange="detectCustom()">
+      <option value="0">Custom</option>
+      <option value="a5">A5</option>
+      <option value="a4" selected>A4</option>
+      <option value="a3">A3</option>
+      <option value="b5">B5</option>
+      <option value="b4">B4</option>
+      <option value="b3">B3</option>
+      <option value="c5">C5</option>
+      <option value="c4">C4</option>
+      <option value="c3">C3</option>
+      <option value="dl">DL</option>
+      <option value="letter">US letter</option>
+      <option value="legal">US legal</option>
+    </select>
+    <div style="display:none" id="customsizeDiv">
+      <label to="customwidth">Width:</label>
+      <input type="number" id="customwidth" size="5" value="210">
+      <label to="customheight">Height:</label>
+      <input type="number" id="customheight" size="5" value="297">
+    </div>
+    <div style="display:inline" id="orientDiv">
+      <label to="orientation">Orientation:</label><select id="orientation">
+	<option value="p" selected>Portrait ▯</option>
+	<option value="l">Landscape ▭</option>
+      </select>
+    </div>
+    
+    <p>Margins: 
+      <label to="m1">L:</label><input type="number" id="m1" size="5" value="10">
+      <label to="m1">R:</label><input type="number" id="m2" size="5" value="5">
+      <label to="m1">T:</label><input type="number" id="m3" size="5" value="5">
+      <label to="m1">B:</label><input type="number" id="m4" size="5" value="5">
+    </p>
+    <p>Axis limit values:
+      <label to="minAxisX">min  x=</label><input type="number" id="minAxisX" value="-1.1" size="5" step="0.1">
+      <label to="maxAxisX">max x=</label><input type="number" id="maxAxisX" value="1.1" size="5" step="0.1">
+      <label to="minAxisY">min  y=</label><input type="number" id="minAxisY" value="-1.1" size="5" step="0.1">
+      <label to="maxAxisY">max y=</label><input type="number" id="maxAxisY" value="1.1" size="5" step="0.1">
+    </p>
+    <p><label to="gpph">Grids per page:</label><input type="number" id="gpph" size="5" value="2">
+      <label to="gppv">x</label><input type="number" id="gppv" size="5" value="2">
+      <br>
+      <label to="m5">Spacing between grids:</label><input type="number" id="m5" size="5"
+							  value="10"><label to="m6">x</label><input type="number" id="m6" size="5" value="10">
+    </p>
+  </div>
+  <p>The above settings allow a maximum radius
+    of <span id="dia">x</span> for the unit circle.</p>
+
+<p>Size and Style: <br>
+<label to="unitR">Unit circle radius:</label><input type="number" value="40" size="5" id="unitR">
+<label to="major">Major division spacing (in terms of the unit circle):</label>
+<input type="number" value="0.1" size="5" id="major" step=0.1>
+<label to="sub">Number of minor subdivisions per major:</label>
+<input type="number" value="5" size="5" min="1" step="1"
+id="sub">
+<br>
+<label to="hAxisWt">H Axis line weight:</label>
+<input type="number" id="hAxisWt" min="0" step="0.01" value="0.25">
+<input type="color" id="hAxisCol" value="#226622">
+<label to="vAxisWt">V Axis line weight:</label>
+<input type="number" id="vAxisWt" min="0" step="0.01" value="0.25">
+<input type="color" id="vAxisCol" value="#226622">
+<br>
+<label to="unitcWt">Unit circle line weight:</label>
+<input type="number" id="unitcWt" min="0" step="0.01" value="0.25">
+<input type="color" id="unitcCol" value="#226622">
+<br>
+<label to="rMajWt">Major line weight:</label>
+<input type="number" id="rMajWt" min="0" step="0.01" value="0.15">
+<input type="color" id="rMajCol" value="#44cc44">
+<label to="rMinWt">minor line weight:</label>
+<input type="number" id="rMinWt" min="0" step="0.01" value="0.15">
+<input type="color" id="rMinCol" value="#cccccc">
+<p>
+<input type="checkbox" id="showRadial"
+      onclick="showHideRadial(event);"><label to="showRadial">Show radial
+  lines</label></p>
+<div id="radial">
+<label to="thetaMajor">Radial major division spacing (degrees):</label>
+<input type="number" value="15" size="5" id="thetaMajor">
+<label to="thetaMajorSub">Radial subdivisions:</label>
+<input type="number" value="3" size="5" min="1" step="1"
+       id="thetaMajorSub">
+<br>
+<label to="thetaMajWt">Radial major line weight:</label>
+<input type="number" id="thetaMajWt" min="0" step="0.01" value="0.15">
+<input type="color" id="thetaMajCol" value="#a0e5e5">
+<label to="vMinWt">minor line weight:</label>
+<input type="number" id="thetaMinWt" min="0" step="0.01" value="0.15">
+<input type="color" id="thetaMinCol" value="#cde5e5">
+</div>
+<br>
+<p><input type="button" onclick="generate()" value="Generate"></p>
+</form>
+<script>
+// some utility functions (like a cheap jquery)
+  function $(id) {
+  return document.getElementById(id).value;
+  }
+  function $float(id) {
+    return parseFloat($(id));
+  }
+  function $int(id) {
+    return parseInt($(id));
+  }
+
+  // getter functions
+  function getPaperSize() { return $('papersize'); }
+  function _getPageFormat() {
+      fmt=getPaperSize();
+      if(fmt==0) {
+	  const w=$float("customwidth");
+	  const h=$float("customheight");
+	  if(w>h)	return {w,h};
+	  else	return {w:w, h:h};
+      	  }
+      
+      var f=pageFormats[fmt];
+      return {w:toUnits(f[0]), h:toUnits(f[1])};
+      }
+  function getPageFormat() {
+      const orientation=document.getElementById("orientation").value;
+      fmt=_getPageFormat();
+      if(orientation=='p') return fmt;
+      else return {w:fmt.h, h:fmt.w};
+      }
+  function getMargins() {
+    return {
+      l:$float('m1'),
+      r:$float('m2'),
+      t:$float('m3'),
+      b:$float('m4'),
+      h:$float('m5'),
+      v:$float('m6')
+    };
+  }
+  
+  function getAxisBounds() {
+      return {
+	  x:{
+	      min: $float("minAxisX"),
+	      max: $float("maxAxisX")
+	      },
+	  y:{
+	      min: $float("minAxisY"),
+	      max: $float("maxAxisY")
+	      }				   
+      	  }
+      }
+  function getGPP() {
+      const h=$int("gpph");
+      const v=$int("gppv");
+      return {h:h, v:v};
+      }
+  /*
+   * getGridSize()
+   * Taking into account the page size, margins, number of grids per page,
+   * and spacing between grids.
+   */
+  function getSpacing() {
+    const unitR=$float('unitR');
+    const major=$float("major")*unitR;
+    const thetaMajor=$float("thetaMajor");
+    const sub=$int("sub");
+    const thetaMajorSub=$int("thetaMajorSub");
+    return {r:unitR, grid:{major:major, sub:sub, minor: major/sub}, theta:{major: thetaMajor, sub: thetaMajorSub, minor:thetaMajor/thetaMajorSub}};
+  }
+  function getGridSize() {
+    const fmt=getPageFormat();
+    var mar=getMargins();
+    const gpp=getGPP();
+    var cell={
+      w:(fmt.w-mar.l-mar.r-(gpp.h-1)*mar.h)/gpp.h,
+      h:(fmt.h-mar.t-mar.b-(gpp.v-1)*mar.v)/gpp.v
+    };
+    const axisBounds=getAxisBounds();
+    const xScale=cell.w/(axisBounds.x.max-axisBounds.x.min);
+    const yScale=cell.h/(axisBounds.y.max-axisBounds.y.min);
+    const scale=(xScale<yScale)?xScale:yScale;
+    // now if scale < xScale, adjust mar.h, mar.l and mar.r to centre within cell
+    if(scale<xScale) {
+      mar.l+=(xScale-scale);
+      mar.r+=(xScale-scale);
+      mar.h+=(xScale-scale)*2;
+    } else { // otherwise adjust vertically in the same way
+      mar.t+=(yScale-scale);
+      mar.b+=(yScale-scale);
+      mar.v+=(yScale-scale)*2;
+    }
+    cell.w=scale*(axisBounds.x.max-axisBounds.x.min);
+    cell.h=scale*(axisBounds.y.max-axisBounds.y.min);
+    return {cell:cell, format: fmt, margins:mar, gpp:gpp, scale: scale};
+  }
+
+  // calculate the maximum unit circle radius based on paper size, margins, axis extension and grid arrangement
+  function calculateMaximumUnitR() {
+    const grid=getGridSize();
+    document.getElementById('dia').innerText=`${grid.scale.toFixed(2)}${$("units")}`;
+    document.getElementById('unitR').max=grid.scale.toFixed(2);
+  }
+
+  function setupDynamicMaxRadius() {
+    const div = document.getElementById('griddef');
+    ['input','select'].forEach( (tag)=> {
+      els=div.getElementsByTagName(tag);
+      for(i=0; i<els.length; i++) {
+	els[i].addEventListener("change",calculateMaximumUnitR);
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setupDynamicMaxRadius();
+    calculateMaximumUnitR();
+    showHideRadial({target:document.getElementById('showRadial')})
+  });
+
+function getStyle() {
+  const rMajWt=$float("rMajWt");
+  const thetaMajWt=$float("thetaMajWt");
+  const rMinWt=$float("rMinWt");
+  const thetaMinWt=$float("thetaMinWt");
+  const rMajCol=$("rMajCol");
+  const thetaMajCol=$("thetaMajCol");
+  const rMinCol=$("rMinCol");
+  const thetaMinCol=$("thetaMinCol");
+  const hAxisWt=$float("hAxisWt");
+  const vAxisWt=$float("vAxisWt");
+  const hAxisCol=$("hAxisCol");
+  const vAxisCol=$("vAxisCol");
+  const unitcWt=$float('unitcWt');
+  const unitcCol=$('unitcCol');
+  return {unitCircle:{wt:unitcWt, col:unitcCol},
+	  grid:{major:{wt:rMajWt, col:rMajCol}, minor: {wt:rMinWt, col:rMinCol}},
+	  theta:{major:{wt:thetaMajWt, col:thetaMajCol}, minor: {wt:thetaMinWt, col:thetaMinCol}},
+	  axis:{h:{wt:hAxisWt, col: hAxisCol},v:{wt:vAxisWt, col: vAxisCol}}
+	 };
+    
+}
+
+  // display or hide custom paper size
+  function detectCustom() {
+      const customsizeDiv=document.getElementById('customsizeDiv');
+      const orientDiv=document.getElementById('orientDiv');
+      if(getPaperSize()==0) {
+	  customsizeDiv.style.display="inline";
+	  //orientDiv.style.display="none";
+      	  }
+      else {
+	  customsizeDiv.style.display="none";
+	  //orientDiv.style.display="inline";
+      	  }
+      }
+
+  function showHideRadial(ev) {
+    document.getElementById('radial').style.display=ev.target.checked?"block":"none";
+  }
+
+  // handling units of measure
+  var unitconversion = {
+      mm: 72/25.4,
+      cm: 72/2.54,
+      in: 72,
+      pt: 1
+  }
+  // convert a measurement in points to specified units
+  function toUnits(x) {
+    return x/unitconversion[$('units')];
+  }
+
+  // Size in pt of various paper formats
+  var pageFormats = {
+      a0: [2383.94, 3370.39],
+      a1: [1683.78, 2383.94],
+      a2: [1190.55, 1683.78],
+      a3: [841.89, 1190.55],
+      a4: [595.28, 841.89],
+      a5: [419.53, 595.28],
+      a6: [297.64, 419.53],
+      a7: [209.76, 297.64],
+      a8: [147.4, 209.76],
+      a9: [104.88, 147.4],
+      a10: [73.7, 104.88],
+      b0: [2834.65, 4008.19],
+      b1: [2004.09, 2834.65],
+      b2: [1417.32, 2004.09],
+      b3: [1000.63, 1417.32],
+      b4: [708.66, 1000.63],
+      b5: [498.9, 708.66],
+      b6: [354.33, 498.9],
+      b7: [249.45, 354.33],
+      b8: [175.75, 249.45],
+      b9: [124.72, 175.75],
+      b10: [87.87, 124.72],
+      c0: [2599.37, 3676.54],
+      c1: [1836.85, 2599.37],
+      c2: [1298.27, 1836.85],
+      c3: [918.43, 1298.27],
+      c4: [649.13, 918.43],
+      c5: [459.21, 649.13],
+      c6: [323.15, 459.21],
+      c7: [229.61, 323.15],
+      c8: [161.57, 229.61],
+      c9: [113.39, 161.57],
+      c10: [79.37, 113.39],
+      dl: [311.81, 623.62],
+      letter: [612, 792],
+      "government-letter": [576, 756],
+      legal: [612, 1008],
+      "junior-legal": [576, 360],
+      ledger: [1224, 792],
+      tabloid: [792, 1224],
+      "credit-card": [153, 243]
+      };
+
+  // create a PDF document with the specified units, page size and orientation
+  function createDoc() {
+    const orientation=$("orientation");
+    const units=$("units");
+    var papersize=$('papersize');
+    if(papersize==0) {
+      const fmt=getPageFormat();
+      papersize=[fmt.w,fmt.h];
+    }
+    return new jsPDF({orientation: orientation, unit: units, format: papersize, putOnlyUsedFonts: true, compress: true});
+  }
+
+  function generate() {
+    const version="1.00.63";
+    
+    const doc = createDoc();
+    const gridSize=getGridSize();
+    //var fmat=gridSize.fmt;
+    const margin=gridSize.margins;
+    var papersize=getPaperSize();
+    if(papersize==0) {
+	papersize=[fmat.w,fmat.h];
+    }
+    const orient=$('orientation');
+    const gridSpacing=getSpacing();
+    const spacing=getSpacing();
+    const style=getStyle();
+    const axisBounds = getAxisBounds();
+
+    // add the information in a comment
+    var comm=`PDF generated by https://maths.prideaux.id.au/unitcircle.html version ${version} (and courtesy of the jsPDF library) `+
+	`with page size ${getPaperSize()} (${gridSize.format.w}x${gridSize.format.h}) orientation=${orient}, margins l=${margin.l}, r=${margin.r}, `+
+	`t=${margin.t}, b=${margin.b}, h=${margin.h}, v=${margin.v}; major spacing=${spacing.grid.major}x${spacing.theta.major}, `+
+	`subdivisions=${spacing.grid.sub}x${spacing.theta.sub}, style (${style.grid.major.wt} ${style.grid.major.col}, `+
+	`${style.grid.minor.wt} ${style.grid.minor.col})x(${style.theta.major.wt} ${style.theta.major.col}, ${style.theta.minor.wt} `+
+	`${style.theta.minor.col}) grids of size ${gridSize.cell.w}x${gridSize.cell.h} arrayed ${gridSize.gpp.h}x${gridSize.gpp.v} `+
+	`x axis bounds [${axisBounds.x.min},${axisBounds.x.max}], y axis bounds [${axisBounds.y.min},${axisBounds.y.max}]`;
+    doc.comment(comm);
+    console.log(comm);
+
+
+    // for each of two pages
+    for(p=0; p<2; p++) {
+      // each horizontal grid
+      for(h=0; h<gridSize.gpp.h; h++) {
+	// each vertical grid
+	for(v=0; v<gridSize.gpp.v; v++) {
+	  var centre={};
+	  centre.x=margin.l+(gridSize.cell.w+margin.h)*h+gridSize.cell.w/2+(axisBounds.x.min+axisBounds.x.max)/2*gridSpacing.r;
+	  centre.y=margin.t+(gridSize.cell.h+margin.v)*v+gridSize.cell.h/2+(axisBounds.y.min+axisBounds.y.max)/2*gridSpacing.r;
+	  
+	  // grid
+	  let x0=centre.x+axisBounds.x.min*gridSpacing.r;
+	  let x1=centre.x+axisBounds.x.max*gridSpacing.r;
+	  let y0=centre.y+axisBounds.y.min*gridSpacing.r;
+	  let y1=centre.y+axisBounds.y.max*gridSpacing.r;
+	  
+	  // minor vertical
+	  doc.setLineWidth(style.grid.minor.wt);
+	  doc.setDrawColor(style.grid.minor.col);
+	  for(x=spacing.grid.minor+centre.x; x<=x1; x+=spacing.grid.minor) {
+	    doc.line(x,y0,x,y1);
+	  }
+	  for(x=-spacing.grid.minor+centre.x; x>=x0; x-=spacing.grid.minor) {
+	    doc.line(x,y0,x,y1);
+	  }
+	  // minor horizontal
+	  for(y=centre.y-spacing.grid.minor; y>=y0; y-=spacing.grid.minor) {
+	    doc.line(x0,y,x1,y);
+	  }
+	  for(y=centre.y+spacing.grid.minor; y<=y1; y+=spacing.grid.minor) {
+	    doc.line(x0,y,x1,y);
+	  }
+	  // major vertical
+	  doc.setLineWidth(style.grid.major.wt);
+	  doc.setDrawColor(style.grid.major.col);
+	  for(x=spacing.grid.major+centre.x; x<=x1; x+=spacing.grid.major) {
+	    doc.line(x,y0,x,y1);
+	  }
+	  for(x=-spacing.grid.major+centre.x; x>=x0; x-=spacing.grid.major) {
+	    doc.line(x,y0,x,y1);
+	  }
+	  // major horizontal
+	  for(y=-spacing.grid.major+centre.y; y>=y0; y-=spacing.grid.major) {
+	    doc.line(x0,y,x1,y);
+	  }
+	  for(y=spacing.grid.major+centre.y; y<=y1; y+=spacing.grid.major) {
+	    doc.line(x0,y,x1,y);
+	  }
+
+	  // axes and radial divisions
+	  if(document.getElementById('showRadial').checked) {
+	    // minor
+	    doc.setLineWidth(style.theta.minor.wt);
+	    doc.setDrawColor(style.theta.minor.col);
+	    var dTheta=spacing.theta.major/spacing.theta.sub;
+	    var minR=getMinR(dTheta, style.theta.minor.wt,0);
+	    for(theta=dTheta; theta<360; theta+=dTheta) {
+	      var z=[polar(minR,theta, centre), polar(gridSpacing.r,theta,centre)];
+	      doc.line(z[0].x, z[0].y, z[1].x,z[1].y);
+	    }
+	    // major
+	    doc.setLineWidth(style.theta.major.wt);
+	    doc.setDrawColor(style.theta.major.col);
+	    var minR=getMinR(spacing.theta.major, style.theta.major.wt,0);
+	    for(theta=spacing.theta.major; theta<360; theta+=spacing.theta.major) {
+	      var z=[polar(minR,theta,centre), polar(gridSpacing.r,theta,centre)];
+	      doc.line(z[0].x, z[0].y, z[1].x,z[1].y);
+	    }
+	  }
+	  // axes
+	  doc.setLineWidth(style.axis.h.wt);
+	  doc.setDrawColor(style.axis.h.col);
+	  doc.line(x0,centre.y,x1,centre.y);
+	  doc.setLineWidth(style.axis.v.wt);
+	  doc.setDrawColor(style.axis.v.col);
+	  doc.line(centre.x, y0,centre.x,y1);
+
+	  //unit circle
+	  doc.setLineWidth(style.unitCircle.wt);
+	  doc.setDrawColor(style.unitCircle.col);
+	  doc.circle(centre.x, centre.y, gridSpacing.r, "S");
+	  
+
+
+	    }
+	}
+	if(p==0) doc.addPage(papersize,orient);
+    }
+    doc.save("polarpaper.pdf");
+}
+function polar(r, theta,centre) {
+    const th_rad=theta/180*Math.PI;
+    return { x:r*Math.sin(th_rad)+centre.x, y:r*Math.cos(th_rad)+centre.y };
+}
+// what is the minimum radius for an axial line such that the gap between centres of adjacent lines is
+// at least k times the line thickness?
+function getMinR(angle, thickness, roundTo) {
+  const k=5;
+  // semi-circumference is
+  const sc=180/angle*k*thickness;
+  if(roundTo==0) return sc/Math.PI;
+  return Math.round(sc/Math.PI/roundTo)*roundTo;
+}
+</script>
+
+<hr>
+<address></address>
+<!-- hhmts start -->Last modified: Tue Dec 27 10:31:20 AWST 2022 <!-- hhmts end -->
+</body> </html>

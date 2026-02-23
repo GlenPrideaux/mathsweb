@@ -1,0 +1,25 @@
+CACHE MANIFEST
+# Cache Manifest Version: 1.0 18
+
+# Core files.
+./index.html
+./index.css
+./whatsmyrule.js
+./bg.png
+./logo.png
+ 
+# iPhone App files (for full-screen app mode).
+iPadStartupL@2x.png
+iPadStartupP.png
+iPadStartupP@2x.png
+iPhoneStartup.png
+iPhoneStartup@2x.png
+iPhoneStartupLong.png
+iPodStartupL.png
+nm1024.png
+nm114.png
+nm144.png
+nm200.png
+nm57.png
+nm72.png
+nm-1.png

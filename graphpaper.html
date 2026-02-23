@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html> <head>
+<title>Graphpaper generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"
+	integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript">
+    var jsPDF = window.jspdf.jsPDF;
+    $(document).ready(function() {
+	if(jsPDF && jsPDF.version) {
+	    $('#dversion').text('Version ' + jsPDF.version);
+	}
+    });
+</script>
+</head>
+
+<body>
+<h1>Graphpaper generator</h1>
+<p>When you click 'Generate' this page will generate a two page PDF
+  file containing graph paper to match your specifications. (It
+  generates two pages to facilitate two-sided printing.)</p>
+<form>
+<label to="units">Units:</label>
+<select id="units">
+  <option value="mm" selected>mm</option>
+  <option value="cm">cm</option>
+  <option value="in">in</option>
+  <option value="pt">pt</option>
+</select> (tested almost exclusively with mm)
+<br>    
+<label to="papersize">Paper size:</label>
+<select id="papersize" onchange="detectCustom()">
+  <option value="0">Custom</option>
+  <option value="a5">A5</option>
+  <option value="a4" selected>A4</option>
+  <option value="a3">A3</option>
+  <option value="b5">B5</option>
+  <option value="b4">B4</option>
+  <option value="b3">B3</option>
+  <option value="c5">C5</option>
+  <option value="c4">C4</option>
+  <option value="c3">C3</option>
+  <option value="dl">DL</option>
+  <option value="letter">US letter</option>
+  <option value="legal">US legal</option>
+</select>
+<div style="display:none" id="customsizeDiv">
+  <label to="customwidth">Width:</label>
+  <input type="number" id="customwidth" size="5" value="210">
+  <label to="customheight">Height:</label>
+  <input type="number" id="customheight" size="5" value="297">
+</div>
+<div style="display:inline" id="orientDiv">
+<label to="orientation">Orientation:</label><select id="orientation">
+  <option value="p" selected>Portrait ▯</option>
+  <option value="l">Landscape ▭</option>
+</select>
+</div>
+
+<p>Margins: Enter one number (and the others blank) for all margins
+equal. Enter two numbers for symmetrical (Left/Right) and (Top/Bottom)
+margins. Otherwise enter L, R, T, B.</p>
+<input type="number" id="m1" size="5" value="5">
+<input type="number" id="m2" size="5" value="8.5">
+<input type="number" id="m3" size="5">
+<input type="number" id="m4" size="5">
+
+<p>Style: we can have lines or dots or both. We have a major spacing,
+and a number of minor divisions between each major. (For example, to
+have 10mm major spacing and 2mm minor spacing, set major spacing to 10
+and subdivisions to 5.) You can specify vertical and horizontal
+spacing separately. For logarithmic spacing, minor spacing is
+adaptive.</p>
+<label to="hMajor">Horizontal major division spacing:</label>
+<input type="number" value="10" size="5" id="hMajor"></input>
+<label to="hMajorSub">Horizontal subdivisions:</label>
+<input type="number" value="10" size="5" min="1" step="1"
+id="hMajorSub"></input>
+<input type="checkbox" id="hLog"><label to="hLog">Logarithmic</label>
+<br>
+<label to="hMajWt">Horizontal major line weight:</label>
+<input type="number" id="hMajWt" min="0" value="0.25">
+<input type="color" id="hMajCol" value="#44cc44">
+<label to="hMinWt">minor line weight:</label>
+<input type="number" id="hMinWt" min="0" value="0.15">
+<input type="color" id="hMinCol" value="#cccccc">
+<br>
+<label to="vMajor">Vertical major division spacing:</label>
+<input type="number" value="10" size="5" id="vMajor"></input>
+<label to="vMajorSub">Vertical subdivisions:</label>
+<input type="number" value="10" size="5" min="1" step="1"
+       id="vMajorSub"></input>
+<input type="checkbox" id="vLog"><label to="vLog">Logarithmic</label>
+<br>
+<label to="vMajWt">Vertical major line weight:</label>
+<input type="number" id="vMajWt" min="0" value="0.25">
+<input type="color" id="vMajCol" value="#44cc44">
+<label to="vMinWt">minor line weight:</label>
+<input type="number" id="vMinWt" min="0" value="0.15">
+<input type="color" id="vMinCol" value="#cccccc">
+<br>
+Major divisions: <input type="checkbox" id="majorlines" checked><label to="majorlines">draw lines</label>
+<input type="checkbox" id="majordots"><label to="majordots">draw
+  dots</label>
+<br>
+Minor divisions: <input type="checkbox" id="minorlines" checked><label to="minorlines">draw lines</label>
+<input type="checkbox" id="minordots"><label to="minordots">draw
+  dots</label>
+<br>
+Note: dots are drawn with the weight and colour of horizontal lines.
+
+<p><input type="BUTTON" onclick="generate()" value="Generate"></input></p>
+</form>
+<script>
+
+// display or hide custom paper size
+function detectCustom() {
+    const customsizeDiv=document.getElementById('customsizeDiv');
+    const orientDiv=document.getElementById('orientDiv');
+    if(paperSize()==0) {
+	customsizeDiv.style.display="inline";
+	//orientDiv.style.display="none";
+    }
+    else {
+	customsizeDiv.style.display="none";
+	//orientDiv.style.display="inline";
+    }
+}
+
+function paperSize() {
+    return document.getElementById('papersize').value;
+}
+
+var unitconversion = {
+    mm: 72/25.4,
+    cm: 72/2.54,
+    in: 72,
+    pt: 1
+}
+function toUnits(x) {
+    const units=document.getElementById("units").value;
+    return x/unitconversion[units];
+}
+function createDoc() {
+    const orientation=document.getElementById("orientation").value;
+    const units=document.getElementById("units").value;
+    var papersize=paperSize();
+    if(papersize==0) {
+	fmt=pageFormat();
+	papersize=[fmt.w,fmt.h];
+    }
+    return new jsPDF({orientation: orientation, unit: units, format: papersize, putOnlyUsedFonts: true, compress: true});
+}
+
+  // Size in pt of various paper formats
+  var pageFormats = {
+    a0: [2383.94, 3370.39],
+    a1: [1683.78, 2383.94],
+    a2: [1190.55, 1683.78],
+    a3: [841.89, 1190.55],
+    a4: [595.28, 841.89],
+    a5: [419.53, 595.28],
+    a6: [297.64, 419.53],
+    a7: [209.76, 297.64],
+    a8: [147.4, 209.76],
+    a9: [104.88, 147.4],
+    a10: [73.7, 104.88],
+    b0: [2834.65, 4008.19],
+    b1: [2004.09, 2834.65],
+    b2: [1417.32, 2004.09],
+    b3: [1000.63, 1417.32],
+    b4: [708.66, 1000.63],
+    b5: [498.9, 708.66],
+    b6: [354.33, 498.9],
+    b7: [249.45, 354.33],
+    b8: [175.75, 249.45],
+    b9: [124.72, 175.75],
+    b10: [87.87, 124.72],
+    c0: [2599.37, 3676.54],
+    c1: [1836.85, 2599.37],
+    c2: [1298.27, 1836.85],
+    c3: [918.43, 1298.27],
+    c4: [649.13, 918.43],
+    c5: [459.21, 649.13],
+    c6: [323.15, 459.21],
+    c7: [229.61, 323.15],
+    c8: [161.57, 229.61],
+    c9: [113.39, 161.57],
+    c10: [79.37, 113.39],
+    dl: [311.81, 623.62],
+    letter: [612, 792],
+    "government-letter": [576, 756],
+    legal: [612, 1008],
+    "junior-legal": [576, 360],
+    ledger: [1224, 792],
+    tabloid: [792, 1224],
+    "credit-card": [153, 243]
+  };
+
+function _pageFormat() {
+    fmt=paperSize();
+    if(fmt==0) {
+	const w=document.getElementById("customwidth").value;
+	const h=document.getElementById("customheight").value;
+	if(w>h)	return {w:parseFloat(h),h:parseFloat(w)};
+	else	return {w:parseFloat(w),h:parseFloat(h)};
+    }
+
+    var f=pageFormats[fmt]
+    return {w:toUnits(f[0]), h:toUnits(f[1])};
+}
+function pageFormat() {
+    const orientation=document.getElementById("orientation").value;
+    fmt=_pageFormat();
+    if(orientation=='p') return fmt;
+    else return {w:fmt.h, h:fmt.w};
+}
+function margins() {
+    var m1=document.getElementById("m1").value;
+    var l=parseFloat(m1);
+    var r,t,b;
+    var m2=document.getElementById("m2").value;
+    var m3=document.getElementById("m3").value;
+    var m4=document.getElementById("m4").value;
+    if(m4=='' && m3=='' && m2=='')
+	r=t=b=l;
+    else if(m4=='' && m3=='' && m2!='') {
+	t=b=parseFloat(m2);
+	r=l;
+    }
+    else if(m2!='' && m3!='' && m4!='') {
+	r=parseFloat(m2);
+	t=parseFloat(m3);
+	b=parseFloat(m4);
+    }
+    else throw("Invalid margins.");
+    return {l:l, r:r, t:t, b:b};
+}
+function getSpacing() {
+    const hMajor=parseFloat(document.getElementById("hMajor").value);
+    const vMajor=parseFloat(document.getElementById("vMajor").value);
+    const hMajorSub=parseInt(document.getElementById("hMajorSub").value);
+    const vMajorSub=parseInt(document.getElementById("vMajorSub").value);
+    const hLog=document.getElementById("hLog").checked;
+    const vLog=document.getElementById("vLog").checked;
+    return {h:{major:hMajor, sub:hMajorSub, log:hLog}, v:{major: vMajor, sub: vMajorSub, log:vLog}};
+}
+function getStyle() {
+    const hMajWt=parseFloat(document.getElementById("hMajWt").value);
+    const vMajWt=parseFloat(document.getElementById("vMajWt").value);
+    const hMinWt=parseFloat(document.getElementById("hMinWt").value);
+    const vMinWt=parseFloat(document.getElementById("vMinWt").value);
+    const hMajCol=document.getElementById("hMajCol").value;
+    const vMajCol=document.getElementById("vMajCol").value;
+    const hMinCol=document.getElementById("hMinCol").value;
+    const vMinCol=document.getElementById("vMinCol").value;
+    return {h:{major:{wt:hMajWt, col:hMajCol}, minor: {wt:hMinWt, col:hMinCol}},
+	    v:{major:{wt:vMajWt, col:vMajCol}, minor: {wt:vMinWt, col:vMinCol}}
+	   };
+    
+}
+function generate() {
+    const version="1.00.144";
+    
+// Default export is a4 paper, portrait, using millimeters for units
+// (I love sensible defaults!)
+    const doc = createDoc();
+    var papersize=paperSize();
+    if(papersize==0) {
+	fmt=pageFormat();
+	papersize=[fmt.w,fmt.h];
+    }
+    const orient=document.getElementById('orientation').value;
+    const margin=margins(); // { l, r, t, b }
+    const format=pageFormat(); // { w, h }
+    const majorlines=document.getElementById("majorlines").checked;
+    const majordots=document.getElementById("majordots").checked;
+    const minorlines=document.getElementById("minorlines").checked;
+    const minordots=document.getElementById("minordots").checked;
+    const spacing=getSpacing();
+    const style=getStyle();
+
+    // add the information in a comment
+    var comm=`PDF generated by https://maths.prideaux.id.au/graphpaper.html version ${version} (and courtesy of the jsPDF library) with page size ${paperSize()} (${_pageFormat()} ${format.w}x${format.h}) orientation=${orient}, margins l=${margin.l}, r=${margins.r}, t=${margins.t}, b=${margins.b}, majorlines=${majorlines}, majordots=${majordots}, minorlines=${minorlines}, minordots=${minordots}, major spacing=${spacing.h.major}x${spacing.v.major}, subdivisions=${spacing.h.sub}x${spacing.v.sub}, log=${spacing.h.log}x${spacing.v.log}, style (${style.h.major.wt} ${style.h.major.col}, ${style.h.minor.wt} ${style.h.minor.col})x(${style.v.major.wt} ${style.v.major.col}, ${style.v.minor.wt} ${style.v.minor.col})`;
+    doc.comment(comm);
+    // console.log(comm);
+
+
+
+/*
+ * For logarithmic spacing let the decade spacing be ten times the major division size. We subdivide this into ten semimajor divisions.
+ * We subdivide the semimajor divisions into minor divisions to be as near as possible to major/sub wide while being 0.1, 0.2 or 0.5 of the semimajor
+ * divisions.
+ * Majors : realx = start+scale*log(x/x_0)
+ * We want plotx=start+10*major when x/x_0=10 so scale=10*major
+ */
+    
+    for(p=0; p<2; p++) {
+	// how many minor divisions fit?
+	var hminor=spacing.h.major/spacing.h.sub;
+	var nhminor= Math.floor((format.w-margin.l-margin.r)/hminor);
+	var hextra=format.w-margin.l-margin.r - nhminor*hminor;
+	var vminor=spacing.v.major/spacing.v.sub;
+	var nvminor= Math.floor((format.h-margin.t-margin.b)/vminor);
+	var vextra=format.h-margin.t-margin.b - nvminor*vminor;
+	var top=margin.t+Math.floor(vextra/2);
+	var bot=top+vminor*nvminor;
+	var left=margin.l+Math.floor(hextra/2);
+	var right=left+hminor*nhminor;
+	var firsty=top;
+	var firstx=left;
+	if(! spacing.h.log){
+
+	    doc.setLineWidth(style.v.minor.wt);
+	    doc.setDrawColor(style.v.minor.col);
+	    // draw vertical lines
+	    if(minorlines)
+		for(x=firstx; x<=right; x+=hminor)
+		    doc.line(x,top, x, bot);
+	}
+	if(! spacing.v.log) {
+	    // how many minor divisions fit?
+	    // draw horizontal lines
+	    doc.setLineWidth(style.h.minor.wt);
+	    doc.setDrawColor(style.h.minor.col);
+	    doc.setFillColor(style.h.minor.col);
+	    for(y=firsty; y<=bot; y+=vminor) {
+		if(minorlines) doc.line(left, y, right, y);
+		if(minordots) 
+		    for(x=firstx; x<=right; x+=hminor)
+			doc.circle(x,y,style.h.minor.wt/2,"F");
+	    }
+	}
+	// now the same for major divisions
+	// how many major divisions fit?
+	var hmajor=spacing.h.major;
+	var nhmajor= Math.floor(nhminor/spacing.h.sub);
+	var hext=nhminor-spacing.h.sub*nhmajor;
+	//firstx+=Math.floor(hext/2)*hminor; // centres majors ... don't want it.
+	if(! spacing.h.log) {
+	    doc.setLineWidth(style.v.major.wt);
+	    doc.setDrawColor(style.v.major.col);
+	    
+	    // draw vertical lines
+	    if(majorlines)
+		for(x=firstx; x<right+0.5*hminor; x+=hmajor)
+		    doc.line(x,top, x, bot);
+	} else { // logarithmic ... we don't even try to do dotty log paper.
+	    var nhmajor, scalefactor, plotx, nextplotx, dx;
+	    nhmajor= Math.floor(10*Math.log((format.w-margin.l-margin.r)/(spacing.h.major))/Math.log(10));
+	    scalefactor=10*spacing.h.major/Math.log(10);
+	    // draw vertical lines
+	    dx=1;
+	    nextplotx=margin.l;
+	    for(var x=1; nextplotx<format.h-margin.b; x+=dx) {
+		if(x/dx>=10) dx*=10;
+		plotx=nextplotx;
+		doc.setLineWidth(style.v.major.wt);
+		doc.setDrawColor(style.v.major.col);
+		if(plotx<=right) doc.line(plotx,margin.t, plotx, format.h-margin.b);
+		// minor lines
+		// ideally, the average minor spacing is hminor.
+		// Between this plotx and the next the distance is
+		nextplotx=scalefactor*Math.log(x+dx)+margin.l;
+		var idealSteps=(nextplotx-plotx)/hminor;
+		var minorStepSize;
+		if(idealSteps>7.5) minorStepSize=dx/10;
+		else if(idealSteps>3) minorStepSize=dx/5;
+		else if(idealSteps>1.5) minorStepSize=dx/2;
+		else minorStepSize=dx;
+		console.log(`x=${x} minorStepSize=${minorStepSize}\n`);
+		doc.setLineWidth(style.v.minor.wt);
+		doc.setDrawColor(style.v.minor.col);
+		for(var mx=x+minorStepSize; mx<x+dx; mx+=minorStepSize) {
+		    plotx=scalefactor*Math.log(mx)+margin.l;
+		    if(plotx<=right)
+			doc.line(plotx,margin.t, plotx, format.h-margin.b);
+		}
+	    }
+	}
+
+	if(! spacing.v.log) {
+	    // how many major divisions fit?
+	    var vmajor=spacing.v.major;
+	    var nvmajor= Math.floor(nvminor/spacing.v.sub);
+	    var vext=nvminor-spacing.v.sub*nvmajor;
+	    firsty+=vext*vminor; // put the extras at the top
+	    doc.setLineWidth(style.h.major.wt);
+	    doc.setDrawColor(style.h.major.col);
+	    doc.setFillColor(style.h.major.col);
+
+	    // draw horizontal lines
+	    for(y=firsty; y<=bot; y+=vmajor) {
+		if(majorlines) doc.line(left, y, right, y);
+		if(majordots) 
+		    for(x=firstx; x<=right; x+=hmajor)
+			doc.circle(x,y,style.h.major.wt/2,"F");
+	    }
+	} else { // logarithmic ... we don't even try to do dotty log paper.
+	    var nvmajor, scalefactor, ploty, nextploty, dy;
+	    nvmajor= Math.floor(10*Math.log((format.h-margin.t-margin.b)/(spacing.v.major))/Math.log(10));
+	    scalefactor=10*spacing.v.major/Math.log(10);
+	    // draw vertical lines
+	    dy=1;
+	    nextploty=format.h-margin.b
+	    for(var y=1; nextploty>margin.t; y+=dy) {
+		if(y/dy>=10) dy*=10;
+		ploty=nextploty;
+		doc.setLineWidth(style.h.major.wt);
+		doc.setDrawColor(style.h.major.col);
+		if(ploty>=top) doc.line(margin.l, ploty, format.w-margin.r, ploty);
+		// minor lines
+		// ideally, the average minor spacing is vminor.
+		// Between this ploty and the next the distance is
+		nextploty=-scalefactor*Math.log(y+dy)+format.h-margin.b;
+		var idealSteps=-(nextploty-ploty)/vminor;
+		var minorStepSize;
+		if(idealSteps>7.5) minorStepSize=dy/10;
+		else if(idealSteps>3) minorStepSize=dy/5;
+		else if(idealSteps>1.5) minorStepSize=dy/2;
+		else minorStepSize=dy;
+		// console.log(`y=${y} minorStepSize=${minorStepSize}\n`);
+		doc.setLineWidth(style.h.minor.wt);
+		doc.setDrawColor(style.h.minor.col);
+		for(var my=y+minorStepSize; my<y+dy; my+=minorStepSize) {
+		    ploty=-scalefactor*Math.log(my)+format.h-margin.b;
+		    if(ploty>=top) doc.line(margin.l, ploty, format.w-margin.r, ploty);
+		}
+	    }
+	}
+	if(p==0) doc.addPage(papersize,orient);
+    }
+    doc.save("graphpaper.pdf");
+}
+</script>
+
+<hr>
+<address></address>
+<!-- hhmts start -->Last modified: Thu Dec 22 13:43:36 AWST 2022 <!-- hhmts end -->
+</body> </html>

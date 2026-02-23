@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RationalName</title>
+    <script src="math.js" type="text/javascript"></script>
+    <script type="text/javascript" async
+	    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=AM_CHTML">
+    </script>
+    <script type="text/javascript">
+
+getName = function(control="namecontrol") {
+    var nameControl = document.getElementById(control);
+    var name = nameControl.value;
+    return name.replace(/[^A-Za-z]/,"@").toUpperCase()
+}
+putOutput = function(text,id) {
+    var outputControl = document.getElementById(id);
+    outputControl.innerHTML = text;
+}
+stringToNumbers = function(c, spaces=0) {
+    var l = c.length;
+    var codes = [];
+    for(i=0; i<l; i++) 
+	codes.push(c.charCodeAt(i)==64? spaces:(c.charCodeAt(i)-64));
+    return codes;
+}
+buildMatrix = function(len) {
+    /* row number: base; column number: index */
+    var M = [];
+    for(i=1; i<=len; i++) {
+	var r = [];
+	var n = 1;
+	for(j=0; j<len; j++) {
+	    r.push(math.fraction(n,1));
+	    n *= i;
+	}
+	M.push(r);
+    }
+    return math.matrix(M);
+}
+
+poly = function(coeff) {
+    coeff = math.flatten(coeff);
+    var poly="";
+    var joiner = "";
+    var index=0;
+    math.forEach(coeff, function(val, idx, mat) {
+	if(val.n!=0) {
+	    var term="";
+	    poly=joiner.concat(poly);
+	    joiner="";
+	    term = (val.d!=1?"(":"").concat((index==0||(val.n!=1 && val.n!=-1))?val.n:"").concat(index>0?"x":"").concat(index>1?"^".concat(index):"").concat(val.d!=1?")/".concat(val.d):"");
+	    if(val.s<0) term = "-".concat(term);
+	    else joiner="+";
+	    poly=term.concat(poly);
+	}
+	index +=1;
+    });
+    return poly;
+}
+commonDenominator=function(coeff) {
+    var d=1;
+    math.forEach(coeff, function(val, idx, mat) {
+	d = math.lcm(d, val.d);
+    });
+    return d;
+}
+gcd = function(coeff) {
+    var d=0;
+    math.forEach(coeff, function(val,idx,mat) {
+	if(d==0) d = val.n;
+	else d = math.gcd(d,val.n);
+    });
+    return d;
+}
+maketable = function(name, coeff, rCoeff) {
+    var table="<table><tr><th>`x`</th><th colspan=\"2\">`f(x)`</th></tr>";
+    stringToNumbers(name).forEach(function(elt,idx,mat) {
+	table=table.concat("<tr><td>").concat(idx+1).concat("</td>")
+	    .concat("<td>").concat(elt)
+	    .concat("</td><td style=\"font-family:monospace;\">[").concat(name[idx].replace(/@/,"&blank;")).concat("] ")
+	    .concat(math.divide(evaluate(coeff,idx+1), evaluate(rCoeff, idx+1)))
+	    .concat("</td></tr>");
+    });
+    return table.concat("</table>");
+}
+polySolve = function(name) {
+    var Minv = math.inv(buildMatrix(name.length));
+    var nameMat = math.transpose(math.matrix([name]));
+    var coeff = math.multiply(Minv,nameMat);
+    return coeff;
+}
+reverseString = function(str) {
+    return str.split("").reverse().join("");
+}
+multiplyArrays = function(a,b) {
+    var p = a.map(function(e,i){
+	return e*b[i];
+    });
+    return p;
+}
+evaluate = function(coeff, x) {
+    var value = math.fraction(0,1);
+    var xpower = math.fraction(1,1);
+    math.forEach(coeff, function(elt, idx, mat) {
+	value = math.add(value,math.multiply(elt,xpower));
+	xpower = math.multiply(xpower,x);
+    });
+    return value;
+}
+go = function() {
+    math.config({number: 'Fraction'});
+    var name = getName();
+    var denomName = getName("denomcontrol");
+    var nameNum = stringToNumbers(name);
+    var rName;
+    if(denomName.length > 0) rName = denomName;
+    else rName = reverseString(name);
+    var rNameNum = stringToNumbers(rName, 1);
+    var rCoeff = polySolve(rNameNum);
+    for(i=rName.length; i<name.length; i++) {
+	rNameNum[i]=evaluate(rCoeff,i+1);
+    }
+    var coeff = polySolve(multiplyArrays(nameNum,rNameNum));
+    var d = commonDenominator(coeff);
+    var m = gcd(coeff)
+    var rD = commonDenominator(rCoeff);
+    var rM = gcd(rCoeff);
+    var g = math.gcd(d, rD)* math.gcd(m, rM);
+    var num = poly(math.multiply(coeff,d*rD/g));
+    var den = poly(math.multiply(rCoeff, rD*d/g));
+    putOutput(maketable(name, coeff, rCoeff),"outputDiv");
+    putOutput("`f(x)=(".concat(num).concat(")/(").concat(den).concat(")`"),"math");
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"math"]);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"outputDiv"]);
+}
+
+    
+    </script>
+  </head>
+  <body>
+    <h1>RationalName</h1>
+    <p>Like PolyName, but for rational functions! Have you ever wished you could generate your name from a rational function? Well now you can! Enter your name, and generate a rational function where the `f(1)` represents the first letter of your name (where 1 maps to A, 2 to B, etc.), `f(2)` gives the second letter, and so on. You can also specify another word to use as the denominator polynomial.</p>
+    <p>Name: <input type="text" id="namecontrol" onchange="go();"></input><br/>
+    Denominator: <input type="text" id="denomcontrol" onchange="go();"></input>
+    </p>
+    <div id="math" style="margin:2em;"></div>
+    <div id="outputDiv" style="font-size:90%"></div>
+  </body>
+</html>

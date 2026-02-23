@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Addition Charts</title>
+<style>
+    td { 
+	border: solid black 1px;
+    }
+    td,th {
+	padding: 1pt, 3pt;
+	width:84px;
+	height:20px;
+    }
+input.good {
+    background: rgb(128,255,128);
+}
+input.bad {
+    background: rgb(255,128,128);
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<h1>Addition Charts</h1>
+<!-- This is version 1.1 -->
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Congratulations, you&rsquo;ve solved it!</p>
+  </div>
+
+</div>
+    
+<div id="chart">
+</div>
+<input type="radio" name="difficulty" value="1" checked="checked">Easiest</input>
+<input type="radio" name="difficulty" value="2">Medium</input>
+<input type="radio" name="difficulty" value="3">Hardest</input>
+<br>
+<input type="submit" onclick="blankChart()" value="Fill-in chart"/>
+<input type="submit" onclick="puzzle()" value="Puzzle"/>
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script type="text/javascript">
+// globals
+    var SIZE=4; // size of the (square) grid
+    var chartRow=[]; // array of objects containing cell values and whether or not a cell is solved
+
+// Get the modal
+var modal = document.getElementById('myModal');
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+
+function randBetween(from,to)
+{
+  return Math.floor(Math.random()*(to-from+1)+from);
+}
+function randomTerm(diff)
+{
+    var rval;
+    switch(diff) {
+    case "2":
+	rval= randBetween(0,10)+randBetween(-5,10);
+	break;
+    case "3":
+	rval= randBetween(-10,10)+randBetween(-10,10);
+	break;
+    case "1":
+    default:
+	rval= randBetween(0,10);
+	break;
+    }
+// disallow zero using tail recursion
+    if(rval!=0) return rval;
+    else return randomTerm(diff);
+}
+var chartdiv=document.getElementById("chart");
+function getDifficulty()
+{
+    var radios=document.getElementsByName("difficulty");
+    var rval=1;
+    for (var i = 0, length = radios.length; i < length; i++) {
+	if (radios[i].checked) {
+            rval=radios[i].value;
+	    break;
+	}
+    }
+    return rval;
+}
+
+var rc = {
+    COLUMNS: 1,
+    ROWS: 2
+};
+
+// extract a column of a 2D matrix.
+function getCol(matrix, col){
+    var column = [];
+    for(var i=0; i<matrix.length; i++){
+        column.push(matrix[i][col]);
+    }
+    return column;
+}
+
+// check whether duplicate values exist in row or column headings
+function hasDupes(chartRow, rowsOrColumns)
+{
+    var headings,
+	i,
+	len,
+	lastval;
+    // get row or column headings
+    if (rowsOrColumns == rc.COLUMNS) {
+	headings = chartRow[0];
+    } else {
+	headings = getCol(chartRow,0);
+    }
+    len=headings.length;
+    // we must have length of at least 3 in order to have dupes
+    // (since headings[0] is unused)
+    if(len<3) return false;
+
+    // because we reject an entry if it's a duplicate, the only
+    // place a duplicated entry can exist is at the end of the list,
+    // so we don't need to do anything very clever.
+    lastval = headings[len-1].value;
+    // for each heading excluding the last,
+    //   check to see if its value = lastval,
+    //   if so, we have dupes
+    for (i=1;i<len-1;i++) {
+	if(headings[i].value == lastval) { return true; }
+    }
+    return false;
+}
+	
+function prepareAdditionChart()
+{
+    chartRow=new Array();
+    // we have made chartRow a global so we can more easily test completion
+    SIZE=3+Number(getDifficulty());
+    diff=getDifficulty();
+    for(r=0; r<SIZE; r++) {
+	chartRow[r]=new Array();
+	if(r==0) {
+	    for(c=1; c<SIZE; c++) {
+		do {
+		    chartRow[r][c]= { value : randomTerm(diff), solved: false };
+		} while (hasDupes(chartRow,rc.COLUMNS));
+	    }
+	} else {
+	    do {
+		chartRow[r][0] =  { value : randomTerm(diff), solved: false};
+	    } while (hasDupes(chartRow, rc.ROWS));
+	    for(c=1; c<SIZE; c++) {
+		chartRow[r][c]= {
+		    value : chartRow[r][0].value + chartRow[0][c].value,
+		    solved : false
+		};
+	    }
+	}
+    }
+    chartRow[0][0]={solved:true};
+    return chartRow;
+}
+
+function toText(expression)
+{
+    html="$$";
+    html=html+expression.value;
+    html=html+"$$";
+    return html;
+}
+
+function parse(text)
+{
+// parse a text string and extract constant
+    return { value : new Number(text) };
+}
+function additionAnswerTable(chartRow)
+{
+    var html="<table id=\"chartTable\">";
+    for(r=0; r<SIZE; r++) {
+	html=html+"<tr>";
+	if(r==0) {
+	    for(c=0; c<SIZE; c++) {
+		if(c==0) {
+		    html=html+"<th onmouseup=\"blankCheatOff()\">$$ + $$</th>";
+		} else {
+		    html=html+"<th>"+toText(chartRow[r][c])+"</th>";
+		}
+	    }
+	} else {
+	    for(c=0; c<SIZE; c++) {
+		if(c==0) {
+		    html=html+"<th>"+toText(chartRow[r][c])+"</th>";
+		} else {
+		    html=html+"<td>"+toText(chartRow[r][c])+"</td>";
+		}
+	    }
+	}
+	html=html+"</tr>";
+    }
+    html=html+"</table>";
+    return html;
+}
+
+function additionBlankBodyTable(chartRow)
+{
+    var html="<table id=\"chartTable\">";
+    for(r=0; r<SIZE; r++) {
+	html=html+"<tr>";
+	if(r==0) {
+	    for(c=0; c<SIZE; c++) {
+		if(c==0) {
+		    html=html+"<th onmousedown=\"cheatOn()\">$$ + $$</th>";
+		} else {
+		    html=html+"<th>"+toText(chartRow[r][c])+"</th>";
+		    chartRow[r][c].solved=true;
+		}
+	    }
+	} else {
+	    for(c=0; c<SIZE; c++) {
+		if(c==0) {
+		    html=html+"<th>"+toText(chartRow[r][c])+"</th>";
+		    chartRow[r][c].solved=true;
+		} else {
+		    html=html+"<td><input size=\"11\" type=\"text\" onchange=\"check(this,"+r+","+c+")\"/></td>";
+		}
+	    }
+	}
+	html=html+"</tr>";
+    }
+    html=html+"</table>";
+    return html;
+}
+
+function additionPuzzleTable(chartRow)
+{
+// start at r0 and random c, put in the value.
+// then random undetermined r in that same c, put in the value.
+// then random undetermined c in that r, put in the value,
+// and so on until every r and c is determined.
+// (sometimes start at c0 and random r instead)
+    var undeterminedRow=new Array();
+    var undeterminedCol=new Array();
+    for(i=0; i<SIZE;i++) {
+	undeterminedRow[i]=i;
+	undeterminedCol[i]=i;
+    }
+    var rc=randBetween(0,1); // 0 for row, 1 for col
+    currentRow=0;
+    currentCol=0;
+    for(i=0; i<2*SIZE-2; i++) {
+	if(rc) {
+	    rc=0;
+	    var col=randBetween(1,undeterminedCol.length-1);
+//	    document.write("c:"+col+"/"+undeterminedCol.length+",");
+	    currentCol=undeterminedCol[col];
+	    undeterminedCol.splice(col,1);
+	    chartRow[currentRow][currentCol].visible=true;
+	} else {
+	    rc=1;
+	    var row=randBetween(1,undeterminedRow.length-1);
+//	    document.write("r:"+row+"/"+undeterminedRow.length+",");
+	    currentRow=undeterminedRow[row];
+	    undeterminedRow.splice(row,1);
+	    chartRow[currentRow][currentCol].visible=true;
+	}
+    }
+    var html="<table id=\"chartTable\">";
+    for(r=0; r<SIZE; r++) {
+	html=html+"<tr>";
+	for(c=0; c<SIZE; c++) {
+	    if(c==0 && r==0) {
+		html=html+"<th onmousedown=\"cheatOn()\">$$ + $$</th>";
+	    } else {
+		if(c==0 || r==0) {
+		    html=html+"<th>";
+		} else {
+		    html=html+"<td>";
+		}
+		if(chartRow[r][c].visible) {
+		    html=html+toText(chartRow[r][c]);
+		    chartRow[r][c].solved=true;
+		} else {
+		    html=html+"<input size=\"11\" type=\"text\" onchange=\"check(this,"+r+","+c+")\"/>";
+		}
+		if(c==0 || r==0) {
+		    html=html+"</th>";
+		} else {
+		    html=html+"</td>";
+		}
+	    }
+	}
+	html=html+"</tr>";
+    }
+    html=html+"</table>";
+    return html;
+}
+
+function isAllSolved()
+{
+    var r, c;
+    for(r=0; r<SIZE; r++) {
+	for(c=0; c<SIZE; c++) {
+	    if(!chartRow[r][c].solved) { return; }
+	}
+    }
+    modal.style.display = "block";
+    return;
+}
+function check(event, r, c)
+{
+    if(event.value=="" || event.value==null) {
+	event.className="";
+    } else {
+	input=parse(event.value);
+	if (input.value==chartRow[r][c].value) {
+	    event.className="good";
+	    chartRow[r][c].solved=true;
+	    isAllSolved();
+	} else {
+	    event.className="bad";
+	    chartRow[r][c].solved=false;
+	}
+    }
+}
+
+function blankChart()
+{
+    chartRow=prepareAdditionChart();
+    chartdiv.innerHTML=additionBlankBodyTable(chartRow);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,chartdiv]);
+}
+function puzzle()
+{
+    chartRow=prepareAdditionChart();
+    chartdiv.innerHTML=additionPuzzleTable(chartRow);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,chartdiv]);
+}
+var cheatTemp;
+function cheatOn()
+{
+    cheatTemp=document.getElementById("chartTable");
+    cheatTemp.parentNode.removeChild(cheatTemp);
+    chartdiv.innerHTML=additionAnswerTable(chartRow);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,chartdiv]);
+}
+function blankCheatOff()
+{
+    var answerTable=document.getElementById("chartTable");
+    var parent=answerTable.parentNode;
+    parent.removeChild(answerTable);
+    chartdiv.appendChild(cheatTemp);
+//    chartdiv.innerHTML=additionBlankBodyTable(chartRow);
+    //    MathJax.Hub.Queue(["Typeset",MathJax.Hub,chartdiv]);
+}
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

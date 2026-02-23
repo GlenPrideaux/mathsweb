@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html manifest="whatsmyrule.manifest" >
+<head>
+<title>What's My Rule?</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="viewport" content="initial-scale = 1.0, maximum-scale = 1.0, user-scalable = yes">
+<link rel="apple-touch-icon" sizes="57x57" href="nm57.png"/>
+<link rel="apple-touch-icon" sizes="72x72" href="nm72.png"/>
+<link rel="apple-touch-icon" sizes="114x114" href="nm114.png"/>
+<link rel="apple-touch-icon" sizes="144x144" href="nm144.png"/>
+<link rel="apple-touch-startup-image" href="iPadStartupP.png" media="screen and (min-device-width:768px) and (max-device-width: 1024px) and (orientation:portrait)"/>
+<link rel="apple-touch-startup-image" href="iPadStartupL.png" media="screen and (min-device-width:768px) and (max-device-width: 1024px) and (orientation:landscape)"/>
+<link rel="apple-touch-startup-image" href="iPadStartupP@2x.png" media="screen and (min-device-width:1536px) and (max-device-width: 2048px) and (orientation:portrait)"/>
+<link rel="apple-touch-startup-image" href="iPadStartupL@2x.png" media="screen and (min-device-width:1536px) and (max-device-width: 2048px) and (orientation:landscape)"/>
+<link rel="apple-touch-startup-image" href="iPhoneStartup.png" media="screen and (device-width:320px) and (device-height: 480px)"/>
+<link rel="apple-touch-startup-image" href="iPhoneStartup@2x.png" media="screen and (device-width:640px) and (device-height: 960px)"/>
+<link rel="apple-touch-startup-image" href="iPhoneStartupLong.png" media="screen and (device-width:640px) and (device-height: 1136px)"/>
+<link href="index.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="wrapper">
+<div id="app">
+<h1>What's My Rule?</h1>
+<div id="rule">
+  <p id="words"></p>
+  <p id="symbols"></p>
+</div>  
+<div id="io">
+  <table id="results">
+    <thead>
+      <tr><th>input</th><th>output</th></tr>
+      <tr><th style="font-style:italic;">x</th><th
+	style="font-style:italic;">y</th></tr>
+	</thead>
+      <tbody>
+      <tr id="myIOrow">
+	<td><input id="in" type="number" size="5" oninput="input()"/></td>
+	<td><input id="out" type="number" size="5" oninput="guess()" disabled="true"/></td>
+	<td><input id="calculate" type="button" value="Calculate"
+	  onclick="calculate()" disabled="true"/></td>
+	<td><input id="giveup" type="button" value="Give up"
+	  onclick="giveUp()" disabled="true"/></td>
+	</tr>
+      </tbody>
+    </table>
+</div>
+<div id="buttons">
+  <p> New rule:<br/>
+  <input type="button" value="Easy" onclick="newRule(1)"/>
+  <input type="button" value="Medium" onclick="newRule(2)"/>
+  <input type="button" value="Tricky" onclick="newRule(3)"/>
+  </p>
+</div>
+</div>
+</div>
+<div id="instructions">
+  <h2>Instructions</h2>
+
+<ol>
+  <li>Select 'Easy', 'Medium' or 'Tricky' to make a new rule.</li>
+  <li>Enter an input number and leave the output number blank, then press 'Calculate' to see what output
+  number the rule gives. Press 'Record' to keep the result to refer to
+  later. Keep doing this until you think you know what
+  the rule is.</li>
+  <li>Enter a new input number <em>and</em> the output number you
+  think the rule will generate, then press 'Check'. You must do this
+  twice in a row to win.</li>
+  </ol>
+  <p>Note that a rule can be written in different ways. You might have
+  written the rule differently than the computer, but still be
+  right.</p>
+<img src="nm-1.png" id="nm" />
+  <div id="nmInput"></div>
+  <div id="nmOutput"></div>
+</div>
+<script type="text/javascript" src="whatsmyrule.js"></script>
+<!--
+<script type="text/javascript" src="mathjax/MathJax.js">
+MathJax.Hub.Config({ 
+    imageFont: null, 
+    extensions: ["tex2jax.js"], 
+    jax: ["input/TeX","output/HTML-CSS"], 
+    tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]},
+    showRenderer: false
+  }); 
+</script>
+-->
+</body>
+</html>

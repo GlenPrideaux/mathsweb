@@ -1,0 +1,151 @@
+/* =========================
+ * Responsive width
+ * =========================*/
+@media screen {
+    body {
+	width:600px;
+	margin: auto;
+	background-color: #def;
+    }
+}
+@media screen and (max-width: 600px){
+    body {
+	width:100%;
+	margin: 0;
+    }
+}
+
+/* =========================
+ * Table style
+ * =========================*/
+td { 
+    border: solid black 1px;
+}
+td,th {
+    padding: 1pt, 3pt;
+    width:84px;
+    height:20px;
+}
+/* =========================
+ * Answer style ...
+ * =========================*/
+.good {
+    background-color: #cfc;
+}
+.good::after {
+    content: "Well done!";
+    font-size:70%;
+    color:#6a6;
+    padding-left: 1em;
+}
+.bad {
+    background-color: #fcc;
+}
+.bad::after {
+    content: "incorrect: please try again";
+    font-size:70%;
+    color:#a66;
+    padding-left: 3em;
+}
+.parseError, .needEquation, .tooManyEquals {
+    background-color: #ccc;
+}
+.parseError::after {
+    content: "meaningless input: please correct it";
+    font-size:70%;
+    color:#666;
+    padding-left: 3em;
+}
+.needEquation::after {
+    content: "enter an equation";
+    font-size:70%;
+    color:#666;
+    padding-left: 3em;
+}
+.tooManyEquals::after {
+    content: "too many '=' signs";
+    font-size:70%;
+    color:#666;
+    padding-left: 3em;
+}
+.unsimple {
+    background-color: #ff6;
+}
+.unsimple::after {
+    content: "correct but needs to be simplified";
+    font-size:70%;
+    color:#aa8;
+    padding-left: 3em;
+}
+
+/* =========================
+ * Modal dialog styles
+ * =========================*/
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* =========================
+ * Problem styles
+ * =========================*/
+.problems-container {
+    background-color: #eee;
+    width: auto;
+}
+.answer {
+    font-size: 18px;
+    display:block;
+    padding: 0;
+    border: 2px solid #ccc;
+    border-left: 0;
+    border-top: 0;
+    margin: 0 29px;
+    margin-top:0;
+    padding: 0 6px;
+    color: #333;
+    border-radius: 0 0 7px 0;
+    font-family: 'PT Sans', sans-serif;
+    width:auto;
+    right: 100%;
+}
+.problem {
+    font-size: 18px;
+    margin: 9px;
+    padding: 6px;
+    color: #333;
+    font-family: 'PT Sans', sans-serif;
+}

@@ -1,0 +1,753 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tarsia Generator</title>
+<style>
+  .dropFiles {
+  width: 100%;
+  min-height: 75px; 
+  height: 75px; 
+  border: 2px dashed; 
+  text-align: center;
+}
+.highlightDropArea {
+    border: 2px green dashed;
+    background: orange;
+    color: white;
+}
+@media print {
+    div.renderOut { display:block; }
+    table, p, input, h1, h2, canvas, div.dropFiles, div.footer { display: none; }
+}
+</style>
+<script>
+MathJax = {
+    loader: {load: ['ui/safe']},
+    svg: {fontCache: 'global' },
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.svg.js"></script>
+<script type="text/javascript" src="js/lexer.js"></script>
+<script type="text/javascript" src="js/parser.js"></script>
+<script type="text/javascript" src="tarsiaparser.js"></script>
+<script>
+"use strict";
+const Version="1.01"
+localStorage.setItem('tarsiaVersion',Version);
+
+// TODO:
+// * allow a backup restore to merge into the current saves rather than overwrite.
+
+
+function trivial() { return true; }
+class Triangle {
+    constructor(row, col, upq) {
+	this.row=row;
+	this.col=col;
+	this.upq=upq;
+	this.leftLink=null;
+	this.rightLink=null;
+	this.bottomLink=null;
+	this.leftLabel=null;
+	this.rightLabel=null;
+	this.bottomLabel=null;
+    }
+}
+class Tarsia {
+    constructor() {
+	this.p=[];
+	this.rowUpq=[];
+	this.nRows=2;
+	this.clean=true;
+	$(window).off('beforeunload');
+	for(var i=0;i<10;i++) {
+	    this.p[i]=$(`<input type="number" min="1" max="10" seq="${i}" size="4" value="${i+1}">`);
+	}
+	this.triangles=[];
+    }
+    getP(n) {
+	return this.p[n];
+    }
+    getPValue(n) {
+	return this.p[n].get(0).valueAsNumber;
+    }
+    setP(n,o) {
+	this.p[n]=o;
+    }
+    triangle(row, col, upq) {
+	if(this.triangles[this.triangleIndex(row,col,upq)]===undefined) return null;
+	return this.triangles[this.triangleIndex(row,col,upq)];
+    }
+    setTriangle(row, col, upq, t) {
+	this.triangles[this.triangleIndex(row,col,upq)]=t;
+    }
+    triangleIndex(row,col,upq) {
+	return (row+col*this.nRows)*2+(upq?0:1);
+    }
+    countLinks() {
+	// return an array of link identifiers
+	// Each identifier is the index to this.triangles multiplied by 4 then
+	// add 0 for leftLink, 1 for rightLink or 2 for bottomLink.
+	// (We multiply by 4 rather than 3 to reduce incidence of rounding artefacts.)
+	let nLinks=[];
+	this.triangles.forEach( function(t, i, a) {
+	    if(t.upq && t.leftLink!==null) nLinks.push(4*i);
+	    if(t.upq && t.rightLink!==null) nLinks.push(4*i+1);
+	    if(t.upq && t.bottomLink!==null) nLinks.push(4*i+2);
+	});
+	return nLinks;
+    }
+    setLinkLabel(link,upq,text) {
+	let t=Math.floor(link/4);
+	let side=link-4*t;
+	let target=this.triangles[t];
+	switch(side){
+	case 0:
+	    if(!upq) target=target.leftLink;
+	    target.leftLabel=text;
+	    break;
+	case 1:
+	    if(!upq) target=target.rightLink;
+	    target.rightLabel=text;
+	    break;
+	case 2:
+	    if(!upq) target=target.bottomLink;
+	    target.bottomLabel=text;
+	    break;
+	default:
+	    console.assert(false,"Something wrong with link identifier.");
+	}
+    }
+    smudge(isClean) {
+	tarsia.clean=isClean;
+	if(isClean) $(window).off('beforeunload');
+	else $(window).on('beforeunload', trivial);
+    }
+
+
+}
+const tarsia = new Tarsia;
+var previewing=false;
+
+
+$(document).ready(function() { // this waits until the document is fully loaded
+    // Put custom logic here
+    const canvas=$("#output")[0];
+    const len=canvas.width/10;
+    const mar=10;
+
+    updatePattern(null);
+    preview(null);
+
+    // initialise nRows to have a change event
+    $("#nRows").change(updatePattern);
+    function updatePattern(event) {
+	tarsia.nRows=$("#nRows")[0].valueAsNumber;
+	tarsia.smudge(false);
+	var pattern= $("#pattern input");
+	var n=pattern.length;
+	for(var i=n; i<tarsia.nRows; i++){
+	    // add a control
+	    tarsia.getP(i).appendTo($("#pattern"));
+	    tarsia.getP(i).bind('change',preview);
+	    tarsia.getP(i).trigger('change');
+	}
+	for(var i=n; i>=tarsia.nRows; i--){
+	    // delete a control
+	    $(`#pattern input[seq='${i}']`).detach();
+	}
+	canvas.height=tarsia.nRows*0.8661*len+2*mar;
+	preview();
+    }
+    $("#pattern input").change(function(ev){
+	tarsia.smudge(false);
+	preview(ev);
+    });
+    function updateTextInputs() {
+	// first preview to make sure structure is correct
+	if(!previewing) preview(null); // conditional prevents infinite loop
+	let links=tarsia.countLinks();
+	let nLinks=links.length;
+	if(nLinks==0) return; // links not yet initialised
+	let table=$('#textTable');
+	let tbody=table.children('tbody');
+	let rows=tbody.children("tr");
+	let nRows=rows.length;
+	tbody.detach()
+	for(let i=0; i<nRows && i<nLinks; i++) {
+	    rows.eq(i).children('td').attr("link",links[i]);
+	    tarsia.setLinkLabel(links[i],true,rows.eq(i).find('input[upq="1"]').get(0).value);
+	    tarsia.setLinkLabel(links[i],false,rows.eq(i).find('input[upq="0"]').get(0).value);
+	}
+	for(let i=nRows; i<nLinks; i++){
+	    // pre-fill for testing and demonstration
+	    let newRow=$( `<tr><td link="${links[i]}" originalRow="${i}"><input type="text" upq="1" originalUpq="1" value="x=${i}"></input>=<input type="text" upq="0" originalUpq="0" value="5x=${5*i}"></input>&nbsp;<input class="preload" n="${i}" type="button" value="Preload"></input></td></tr>` );
+	    tarsia.setLinkLabel(links[i],true,`x=${i}`);
+	    tarsia.setLinkLabel(links[i],false,`5x=${5*i}`);
+	    // end pre-fill
+	    newRow.find('input[type="text"]').bind("change", linkChange);
+	    newRow.find('input.preload').bind('click',preloadOne);
+	    tbody.append(newRow);
+	}
+	for(let i=nRows-1; i>=nLinks; i--){
+	    // delete a row
+	    rows[i].remove();
+	}
+	tbody.appendTo(table);
+    }
+    function linkChange(event) {
+	tarsia.smudge(false);
+	let link=parseInt(event.target.parentElement.attributes["link"].value)
+	tarsia.setLinkLabel(link,$(event.target).attr("upq")=="1",event.target.value);
+    }
+    
+    // Preview
+    //$("#preview").click(preview);
+    function preview(event) {
+	previewing=true; // prevent an infinite loop when we update the text input fields
+	// initialise the canvas
+	const ctx=canvas.getContext("2d");
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	// keep track of the previous row's length and orientation
+	let prevRL=0;
+	let prevUpq=true;
+	// throw away any existing triangles in the tarsia, ready for a rebuild from scratch
+	tarsia.triangles.length=0;
+	// step through the rows
+	for(let r=0; r<tarsia.nRows; r++) {
+	    var rowLen=tarsia.getP(r)[0].valueAsNumber;
+	    // if this row length is greater than the previous, upq = true
+	    // if this row length is less than the previous, upq = false
+	    // if this row length is equal to the previous, upq = !prevUpq
+	    var upq=rowLen>prevRL;
+	    if(rowLen == prevRL) upq=!prevUpq;
+	    tarsia.rowUpq[r]=upq;
+	    for(let c=0; c<rowLen; c++) {
+		//ctx.strokeStyle ="#000000";
+		drawTriangle(r,c,upq, rowLen, ctx);
+		let t=new Triangle(r, c, upq);
+		if(r>0 && !upq) {
+		    t.bottomLink=tarsia.triangle(r-1,c,true);
+		    if(tarsia.triangle(r-1,c,true)!==null) tarsia.triangle(r-1,c,true).bottomLink=t;
+		}
+		tarsia.setTriangle(r,c,upq, t);
+		if(c>0) {
+		    ctx.fillStyle ="#808080";
+		    drawTriangle(r,c-1,!upq, rowLen-1, ctx);
+		    ctx.fill();
+		    t=new Triangle(r, c-1, !upq);
+		    if(upq) {
+			t.rightLink=tarsia.triangle(r,c-1,upq);
+			tarsia.triangle(r,c-1,upq).rightLink=t;
+			t.leftLink=tarsia.triangle(r,c,upq);
+			tarsia.triangle(r,c,upq).leftLink=t;
+		    } else {
+			t.leftLink=tarsia.triangle(r,c-1,upq);
+			tarsia.triangle(r,c-1,upq).leftLink=t;
+			t.rightLink=tarsia.triangle(r,c,upq);
+			tarsia.triangle(r,c,upq).rightLink=t;
+		    }
+		    if(r>0 && c>0 && upq) {
+			if(tarsia.triangle(r-1,c-1,true)!==null) {
+			    t.bottomLink=tarsia.triangle(r-1,c-1,true);
+			    tarsia.triangle(r-1,c-1,true).bottomLink=t;
+			}
+		    }
+		    tarsia.setTriangle(r,c-1,!upq, t);	
+		}
+	    }
+	    prevRL=rowLen;
+	    prevUpq=upq;
+	}
+	updateTextInputs();
+	previewing=false;
+    }
+    function drawTriangle(row,col,upq, rowLen, ctx) {	
+	var x=canvas.width/2-rowLen/2*len+col*len;
+	var y=mar+0.8660*(upq?row:row+1)*len;
+	var y2=y+(upq?1:-1)*0.8660*len;
+	ctx.beginPath();
+	ctx.moveTo(x,y);
+	ctx.lineTo(x-0.5*len,y2);
+	ctx.lineTo(x+0.5*len,y2);
+	ctx.lineTo(x,y);
+	ctx.stroke();
+    }
+
+    $("#shuffleInputs").click(function(ev){
+	tarsia.smudge(false);
+	$(window).on('beforeunload', trivial);
+	let tds=$('#textTable td');
+	let trs=[];
+	let listA=[];
+	let listB=[];
+	let links=tarsia.countLinks();
+	for(let i=0; i<tds.length; i++){
+	    listA.push(i);
+	}
+	for(let i=0; i<tds.length; i++){
+	    let r=Math.floor(Math.random()*(tds.length-i))
+	    listB.push(listA.splice(r,1));
+	}
+	listB.forEach( function(from, i, b) {
+	    let td=tds.eq(from);
+	    let swap=(Math.random()<0.5);
+	    let inputs=tds.eq(from).children('input[type="text"]');
+		
+	    let newRow=$(`<tr><td link="${links[i]}" originalRow="${td.attr('originalRow')}"><input type="text" upq="1" originalUpq="${inputs.eq(swap?1:0).attr('originalUpq')}" value="${inputs.get(swap?1:0).value}"></input>=<input type="text" upq="0" originalUpq="${inputs.eq(swap?0:1).attr('originalUpq')}" value="${inputs.get(swap?0:1).value}"></input>&nbsp;<input class="preload" n="${i}" type="button" value="Preload"></input></td></tr>` );
+	    newRow.find('input[type="text"]').bind("change", linkChange);
+	    newRow.find('input.preload').bind('click',preloadOne);
+	    trs.push(newRow);
+	});
+	$('#textTable').empty();
+	$('#textTable').append(trs);
+	preview();
+    });
+    
+    $("#unShuffleInputs").click(function(ev){
+	tarsia.smudge(false);
+	let tds=$('#textTable td');
+	let trs=[];
+	let listA=[];
+	let links=tarsia.countLinks();
+	for(let i=0; i<tds.length; i++){
+	    listA.push(i);
+	}
+	listA.forEach( function(from, i, b) {
+	    let tr=tds.eq(from).parent();
+	    let original=tds.eq(from).attr("originalRow");
+	    let inputs=tds.eq(from).children('input[type="text"]');
+	    let swap=inputs.eq(0).attr("upq")!=inputs.eq(0).attr("originalUpq");
+	    let newRow=$(`<tr><td link="${links[original]}" originalRow="${original}"><input type="text" upq="1" originalUpq="1" value="${inputs.get(swap?1:0).value}"></input>=<input type="text" upq="0" originalUpq="0" value="${inputs.get(swap?0:1).value}"></input>&nbsp;<input class="preload" n="${i}" type="button" value="Preload"></input></td></tr>` );
+	    newRow.find('input[type="text"]').bind("change", linkChange);
+	    newRow.find('input.preload').bind('click',preloadOne);
+	    trs[original]=newRow;
+	});
+	$('#textTable').empty();
+	$('#textTable').append(trs);
+
+	preview();
+    });
+    
+    const maxHeight=180; //mm of A4 landscape paper between two 15mm margins
+    const maxWidth=267; // ditto
+    $("#renderOut").empty().svg();
+    // Render
+    $("#render").click(function(event) {
+	let svg=$("#renderOut").svg('get');
+	svg.clear();
+	svg.configure({viewBox:"0 0 267 180"}, true);
+	let renderLen=Math.min(60,maxHeight/tarsia.nRows/0.8660);
+
+	// for each triangle, render it.
+	tarsia.triangles.forEach( function(t, i, a) {
+	    renderTriangle(t, t, tarsia.p[t.row].get(0).valueAsNumber, tarsia.rowUpq[t.row], svg, renderLen,$('#textScale').get(0).valueAsNumber)
+	});
+    });
+
+    // Shuffle
+    $("#shuffle").click(function(event) {
+	let tListA=[];
+	tarsia.triangles.forEach( function(t, i, a) {
+	    tListA.push(i);
+	});
+	let n=tListA.length;
+	let tListB=[];
+	let tListC=[...tListA];
+	for(let i=0;i<n; i++) {
+	    let r=Math.floor(Math.random()*(n-i));
+	    tListB.push({from:tListA[i], to:tListC[r]})
+	    for(let j=r; j<n-i-1; j++) {
+		tListC[j]=tListC[j+1];
+	    }
+	    tListC.length--;
+	}
+	// tListB now contains the shuffled mapping
+    	let svg=$("#renderOut").svg('get');
+	svg.clear();
+	svg.configure({viewBox:"0 0 267 180"}, true);
+	let renderLen=Math.min(60,maxHeight/tarsia.nRows/0.8660);
+	tListB.forEach( function(m,i,a) {
+	    let t=tarsia.triangles[m.from];
+	    let q=tarsia.triangles[m.to];
+	    let r=120*Math.floor(Math.random()*3);
+	    renderTriangle(t, q, tarsia.p[q.row].get(0).valueAsNumber, tarsia.rowUpq[q.row], svg, renderLen,
+			   $('#textScale').get(0).valueAsNumber, r);
+	});
+    });
+
+    function renderText(text, svg, context, scale, exScale, isMath) {
+	if(isMath) {
+	    let mj=MathJax.tex2svg(text,{display:false}).firstChild;
+	    let mjbb=mj.getBBox();
+	    let g4=svg.group(context,{transform: `translate(${-mj.width.baseVal.value*exScale/2},${-1-mj.height.baseVal.value*exScale}) scale(${scale})`});
+	    svg.add(g4,mj);
+	} else {
+	    let g4=svg.group(context,{transform: `scale(${scale})`});
+	    var stext=svg.createText();
+	    stext.string(text);
+	    let ss=svg.text(g4,0,0,stext); // place the text
+	    let ssbb=ss.getBBox(); // measure it
+	    svg.remove(ss); // remove it
+	    svg.text(g4,-ssbb.width/2,-(ssbb.height+ssbb.y)-2,stext); // place it again centred
+	}
+    };
+    function renderTriangle(t, q, rowLen, rowUpq, svg, renderLen, scale, rotation=0) {
+	let [row, col, upq]=[q.row, q.col, q.upq];
+	let x=maxWidth/2-rowLen/2*renderLen+renderLen*(col+((upq!=rowUpq)?0.5:0));
+	let y=0.8660*(upq?row:row+1)*renderLen;
+	let y2=y+(upq?1:-1)*0.8660*renderLen;
+	let triangle=svg.polygon([[x,y],[x-0.5*renderLen,y2],[x+0.5*renderLen,y2]],{fill:'none', stroke:'black', strokeWidth:'0.5'});
+	let exScale=7*scale;
+	let isMath=$('input[name="isMathematical"]:checked').val()=="1"
+	// the point about which the triangle can rotate:
+	let yc=(y+2*y2)/3;
+	let g0;
+	if(rotation!==0) {
+	    g0=svg.group({transform: `translate(${x},${yc}) rotate(${rotation})`});
+	} else {
+	    g0=svg.group({transform: `translate(${x},${yc})`});
+	}
+//	svg.circle(g0,0,0,1);
+//	let arc=svg.createPath();
+//	svg.path(g0,arc.move(0,0).line(0, 3), {stroke:'black', strokeWidth:'0.5'});
+	if(t.leftLabel>'') {
+	    let g2=svg.group(g0,{transform: `translate(${(upq?-0.25:0.25)*renderLen},${(y+y2)/2-yc}) rotate(${upq?120:-60})`});
+	    renderText(t.leftLabel, svg, g2, scale, exScale, isMath);
+	}
+	if(t.rightLabel>'') {
+	    let g2=svg.group(g0,{transform: `translate(${(upq?0.25:-0.25)*renderLen},${(y+y2)/2-yc}) rotate(${upq?-120:60})`});
+	    renderText(t.rightLabel, svg, g2, scale, exScale, isMath);
+	}
+	if(t.bottomLabel>'') {
+	    let g2=svg.group(g0,{transform: `translate(0,${y2-yc}) rotate(${upq?0:180})`});
+	    renderText(t.bottomLabel, svg, g2, scale, exScale, isMath);
+	}
+    }
+
+    function collect()
+    {
+	let c={tarsiaVersion: Version, nRows: tarsia.nRows};
+	c.isMathematical=$('input[name="isMathematical"]:checked').val();
+	c.p=[];
+	for(let i=0; i<10; i++) c.p.push(tarsia.getPValue(i));
+	c.txt=[];
+	let td=$('#textTable td');
+	for(let i=0; i<td.length; i++)
+	    c.txt.push({up: td.eq(i).find('input[upq="1"]').get(0).value,
+			down: td.eq(i).find('input[upq="0"]').get(0).value});
+	c.textScale=$("#textScale").get(0).valueAsNumber;
+	return c;
+    }
+    function unpack(c){
+	let version=c.tarsiaVersion;
+	let isMath=c.isMathematical;
+	if(parseFloat(version)<1.01)
+	    isMath="1";
+	$(`input[name="isMathematical"][value="${isMath}"]`).get(0).checked=true;
+	$('#nRows').get(0).value=c.nRows;
+	$('#nRows').trigger('change');
+	let pattern= $("#pattern input");
+	var n=pattern.length;
+	for(let i=0; i<10; i++){
+	    // add a control
+	    tarsia.getP(i).get(0).value=c.p[i];
+	    if(i<c.nRows) {
+		pattern.get(i).value=c.p[i];
+		pattern.eq(i).trigger('change');
+	    }
+	}
+	let td=$('#textTable td');
+	for(let i=0; i<c.txt.length && i<td.length; i++) { // two lengths should be equal ...
+	    td.eq(i).find('input[upq="1"]').get(0).value=c.txt[i].up;
+	    td.eq(i).find('input[upq="1"]').trigger('change');
+	    td.eq(i).find('input[upq="0"]').get(0).value=c.txt[i].down;
+	    td.eq(i).find('input[upq="0"]').trigger('change');
+	}
+	$("#textScale").get(0).value=c.textScale;
+	tarsia.smudge(true);
+    }
+
+    const DIRECTORY='_directory'
+    var loadedFrom='';
+    function isInDirectory(name, directory){
+	for(let i=0; i<directory.length; i++) {
+	    if(typeof directory[i] === 'string' || directory[i] instanceof String){
+		if(directory[i]==name) return i;
+	    } else {
+		if(directory[i].name==name) return i;
+	    }
+	}   
+	return false;
+    }
+    $('#save').click(function(event){
+	let name=$('#saveName').get(0).value;
+	if(name>'') {
+	    let dir=JSON.parse(localStorage.getItem(DIRECTORY));
+	    if(dir===null) dir=[];
+	    let dirIndex=isInDirectory(name, dir);
+	    if(dirIndex!==false) {
+		if(name!=loadedFrom) {
+		    if(false==confirm("You are about to over-write an existing save. You should probably cancel; data will be permanently lost."))
+			return;
+		}
+	    }
+	    localStorage.setItem(name,JSON.stringify(collect()));
+	    let dirRecord={name:name, date:Date().toString().replace(/\w+ (\w+) (\d+) (\d+).*/,'$2 $1 $3')};
+	    if(dirIndex===false)
+		dir.push(dirRecord);
+	    else
+		dir[dirIndex]=dirRecord;
+	    localStorage.setItem(DIRECTORY,JSON.stringify(dir));
+	    updateSaveList();
+	    loadedFrom=name;
+	    alert(`Saved "${name}".`);
+	} else {
+	    alert('Please specify a save name');
+	}
+    });
+    $('#load, #unsave').click(function(event){
+	// unsaved changes?
+	if(tarsia.clean === false && confirm("Loading will overwrite your unsaved changes.") === false) return;
+	
+	let name=$('#loadName').get(0).value;
+	if(true || name>'') {
+	    let c=localStorage.getItem(name);
+	    if(c==null) {
+		alert(`Failed to load "${name}"`);
+		return;
+	    }
+	    unpack(JSON.parse(c));
+	    loadedFrom=name;
+	    $('#saveName').get(0).value=name;
+	    if(event.target.value=="Load and unsave") {
+		localStorage.removeItem(name);
+		dirGC();
+		alert(`Save "${name}" has been deleted. Re-save if you wish to keep this tarsia.`);
+		updateSaveList();
+		tarsia.smudge(false);
+	    }
+	} else {
+	    alert('Select a name to load.');
+	}
+    });
+
+    // directory garbage collection
+    function dirGC() {
+	let name=$('#saveName').get(0).value='';
+	let d=localStorage.getItem(DIRECTORY);
+	if( d == 'undefined') return;
+	let dir=JSON.parse(d);
+	if(dir===undefined || dir===null) return;
+	let dirCopy=[];
+	for(let i=0; i<dir.length; i++) {
+	    let exists=false;
+	    let thisName='';
+	    if(typeof dir[i] === 'string' || dir[i] instanceof String) {
+		thisName=dir[i]; 
+	    } else {
+		thisName=dir[i].name;
+	    }
+	    if(localStorage.getItem(thisName)) exists=true;
+	    // hunt duplicate name entries
+	    if((isInDirectory(thisName, dir.slice(i+1))===false) && exists)
+		dirCopy.push(dir[i]);
+	}
+	localStorage.setItem(DIRECTORY,JSON.stringify(dirCopy));
+	
+    }
+    dirGC();
+    // load the load name selector
+    function updateSaveList() {
+	let d=localStorage.getItem(DIRECTORY);
+	if( d == 'undefined') return;
+	let dir=JSON.parse(d);
+	$('#loadName option:gt(0)').remove();
+	if(dir!==null && dir.length>0)
+	    for (let i=0;i<dir.length;i++) {
+		if((typeof dir[i] === 'string' || dir[i] instanceof String) )
+		    $('<option/>').val(dir[i]).html(dir[i]).appendTo('#loadName');
+		else
+		    $('<option/>').val(dir[i].name).html(`${dir[i].name} (${dir[i].date})`).appendTo('#loadName');
+	    }
+    }
+    updateSaveList();
+
+    function backupStorage(fileName) {
+	/* dump local storage to string */
+	
+	var a = {};
+	for (var i = 0; i < localStorage.length; i++) {
+	    var k = localStorage.key(i);
+	    var v = localStorage.getItem(k);
+	    a[k] = v;
+	}
+	
+	/* save as blob */
+	var textToSave = JSON.stringify(a)
+	var textToSaveAsBlob = new Blob([textToSave], {
+	    type: "text/plain"
+	});
+	var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+	
+	/* download without button hack */
+	var downloadLink = document.createElement("a");
+	downloadLink.download = fileName;
+	downloadLink.innerHTML = "Download File";
+	downloadLink.href = textToSaveAsURL;
+	downloadLink.onclick = function () {
+	    document.body.removeChild(event.target);
+	};
+	downloadLink.style.display = "none";
+	document.body.appendChild(downloadLink);
+	downloadLink.click();	
+    }
+    $('#bu').click( function(event){
+	let buName=`backup-${Date().toString().replace(/\w+ (\w+) (\d+) (\d+).*/,'$2-$1-$3')}.tarsia`;
+	backupStorage(buName);
+    });
+
+
+    // file drag and drop
+    $("#dropFiles").on('dragenter', function(ev) {
+    	// Entering drop area. Highlight area
+      	$("#dropFiles").addClass("highlightDropArea");
+    });
+
+    $("#dropFiles").on('dragleave', function(ev) {
+    	// Going out of drop area. Remove Highlight
+    	$("#dropFiles").removeClass("highlightDropArea");
+    });
+
+    $("#dropFiles").on('drop', function(ev) {
+	// Dropping files
+	ev.preventDefault();
+	ev.stopPropagation();
+
+	// process dropped file
+	if(ev.originalEvent.dataTransfer){
+	    if(ev.originalEvent.dataTransfer.files.length>1) {
+		alert("Please only drag and drop a single file.");
+		return;
+	    }
+	    if(ev.originalEvent.dataTransfer.files.length==1) {
+		var droppedFile = ev.originalEvent.dataTransfer.files[0];
+		//alert(" Dropped File "+ droppedFile.name);
+		let t=droppedFile.text();
+		t.then(function(result){
+		    let restore=JSON.parse(result);
+		    // is it actually a tarsia backup?
+		    if(typeof restore !== 'object') {
+			alert("The file dropped does not appear to be a tarsia backup.")
+			return;
+		    }
+		    let ver = restore.tarsiaVersion;
+		    if(ver===undefined) {
+			ver="0.1"
+			let dir = restore[DIRECTORY];
+			if(dir===undefined) {
+			    alert("The file dropped does not appear to be a tarsia backup.")
+			    return;
+			}
+		    }
+		    if(confirm("Restoring a backup merge with current saves. Tarsias with the same name will be overwritten. Make sure you have a current backup before continuing.")===false)
+			return;
+		    
+		    //localStorage.clear();
+		    let k=Object.keys(restore);
+		    k.forEach(function(e,i,a) {
+			if(e==DIRECTORY) {
+			    // merge directories ... leave duplicate resolution to dirGC once everything's loaded.
+			    let nowDir=[...JSON.parse(localStorage.getItem(e)), ...JSON.parse(restore[e])];
+			    localStorage.setItem(e,JSON.stringify(nowDir));
+			} else {
+			    localStorage.setItem(e,restore[e]);
+			}
+		    });
+		    dirGC();
+		    updateSaveList();
+		});
+	    }
+	}
+	
+
+    	$("#dropFiles").removeClass("highlightDropArea");
+    	return false;
+    });
+
+    $("#dropFiles").on('dragover', function(ev) {
+    	ev.preventDefault();
+    });
+
+    // preload -- we need to parse the input and load it into the text inputs
+    $("#preload").click(function(ev) {
+	let tds=$('#textTable td');
+	let preloadA=$('#preloadA').get(0).value;
+	let preloadB=$('#preloadB').get(0).value;
+	for(let x=0; x<tds.length; x++){
+	    let inputs=tds.eq(x).children('input[type="text"]');
+	    inputs.get(0).value=superParse(preloadA, x);
+	    inputs.get(1).value=superParse(preloadB, x);
+	    inputs.eq(0).trigger('change');
+	    inputs.eq(1).trigger('change');
+	}
+    });
+    function preloadOne(ev) {
+	let x=parseInt(ev.target.attributes.n.value);
+	let preloadA=$('#preloadA').get(0).value;
+	let preloadB=$('#preloadB').get(0).value;
+	let tds=$('#textTable td');
+	let inputs=tds.eq(x).children('input[type="text"]');
+	inputs.get(0).value=superParse(preloadA, x);
+	inputs.get(1).value=superParse(preloadB, x);
+	inputs.eq(0).trigger('change');
+	inputs.eq(1).trigger('change');
+    }
+
+    // on initial load, mark as unchanged.
+    tarsia.smudge(true);
+
+});
+</script>
+</head>
+
+<body>
+<h1>Tarsia Generator</h1>
+<h2>Pattern</h2>
+<p>Number of rows:<input type="number" min="2" max="10" id="nRows" value="3"></input></p>
+<p>Row pattern: <span id="pattern"></span></p>
+<!--p><input id="preview" type="button" value="Preview"></input></p-->
+<canvas id="output" width="600" height="520"></canvas>
+<h2>Puzzle text</h2>
+<p>Each row of the table represents a pair of matching sides.</p>
+<table id="textTable">
+  <tbody>
+  </tbody>
+</table>
+    <p><input id="shuffleInputs" type="button" value="Shuffle inputs"></input><input id="unShuffleInputs" type="button" value="Unshuffle inputs"></input></p>
+    <p>This tarsia is: <br>&nbsp;<input type="radio" name="isMathematical" value="1" id="isMathematicalYes" checked="checked"/><label for="isMathematicalYes">Mathematical (use \text{plain text} for non-mathematical content)</label><br>&nbsp;<input type="radio" name="isMathematical" value="0" id="isMathematicalNo"/><label for="isMathematicalNo">Non-mathematical (no content will be typeset as mathematics)</label></p>
+    <p>Programmatic preload: use square brackets [ ] to perform simple calculations, using x as the row number. For example, the default preload uses "x=[x]" for the first field, and "5x=[5*x]" for the right. You may use operators +, -, *, /, ^ and brackets ( ). Use R, S or T followed by a number to generate a random integer from 0 to one less than the number (e.g. R20 for a number between 0 and 19), then use RR (or SS or TT) to later reference the same number. Preload rules are not saved, and it is expected that preloaded values will often be manually adjusted.</p>
+<table><tr><td><input id="preloadA" value="x=[x]"></input>=<input id="preloadB" value="5x=[5*x]"></input></td><td><input id="preload" type="button" value="Preload all"></input></td></tr></table>
+<p>Text scale: <input id="textScale" type="number" min="0.01"
+		      max="1.00" step="0.01"
+		      value="0.32"></input><br/>
+    <input id="saveName" type="text"></input>
+    <input id="save" type="button" value="Save"></input> 
+    <select id="loadName">
+    <option value="" selected>--Select a save--</option>
+    <option value='tarsia'>tarsia</option>
+    </select>
+    <input id="load" type="button" value="Load"></input>
+    <input id="unsave" type="button" value="Load and unsave"></input>&nbsp;&nbsp;
+    <input id="bu" type="button" value="Backup to file"></input>
+    <div id="dropFiles" class="dropFiles">
+    (Drag and drop backup file here to restore it.)
+    </div><br/>
+  <input id="render" type="button" value="Render Solved"></input>
+  <input id="shuffle" type="button" value="Render Shuffled"></input></p>
+    
+<div id="renderOut"></div>
+</body> </html>

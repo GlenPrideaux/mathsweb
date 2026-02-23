@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>What's My Rule?</title>
+<script type="text/javascript" src="whatsmyrule.js"></script>
+<script type="text/javascript"
+  src="MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<link href="whatsmyrule.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<h1>What's My Rule?</h1>
+<div id="buttons">
+  <p>
+  <input type="button" value="Easy rule" onclick="newRule(1)"/>
+  <input type="button" value="Medium rule" onclick="newRule(2)"/>
+  <input type="button" value="Challenging rule" onclick="newRule(3)"/>
+  </p>
+</div>
+<div id="io">
+  <table id="results">
+    <thead>
+      <tr><th>input</th><th>output</th></tr>
+      <tr><th style="font-style:italic;">x</th><th style="font-style:italic;">y</th></tr>
+      </thead>
+    <tbody>
+      <tr>
+	<td><input id="in" type="number" size="5" oninput="input()"/></td>
+	<td><input id="out" type="number" size="5" oninput="guess()" disabled="true"/></td>
+	<td><input id="calculate" type="button" value="Calculate"
+	  onclick="calculate()" disabled="true"/></td>
+	</tr>
+      </tbody>
+    </table>
+
+<p>"Well done! You really must know my rule. The rule I was using, in words, is (m!=1?multiply by %d then :)[add|subtract] %d (then divide by 2). In symbols this is %s.  Did you get the same rule? (Your rule may look different but really give the same result, in which case it is an <em>equivalent</em> rule.)</p>
+</div>
+</body>
+</html>

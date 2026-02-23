@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="http://games.prideaux.id.au/serenitystyle.css" />
+<link rel="stylesheet" type="text/css" href="http://games.prideaux.id.au/gamestyle.css" />
+
+    <title>Ten Sided Dice roller</title>
+<!--
+<script language="JavaScript" type="text/javascript" src="http://games.prideaux.id.au/lib/javascript-static.js"></script>
+<script language="JavaScript" type="text/javascript" src="http://games.prideaux.id.au/lib/javascript-mod.php"></script>
+<script language="JavaScript" type="text/javascript" src="http://games.prideaux.id.au/lib/overlib.js"></script>
+<script language="JavaScript" type="text/javascript" src="http://games.prideaux.id.au/lib/cookies.js"></script>
+-->
+
+<script language="JavaScript" type="text/javascript" defer="defer">
+
+<!-- // Non-Static Javascript functions
+
+// setTimeout('fix_column_widths()', 20);
+
+function openpopup(url,name,options,fullscreen) {
+  fullurl = "http://games.prideaux.id.au" + url;
+  windowobj = window.open(fullurl,name,options);
+  if (fullscreen) {
+     windowobj.moveTo(0,0);
+     windowobj.resizeTo(screen.availWidth,screen.availHeight);
+  }
+  windowobj.focus();
+  return false;
+}
+
+function uncheckall() {
+  void(d=document);
+  void(el=d.getElementsByTagName('INPUT'));
+  for(i=0;i<el.length;i++)
+    void(el[i].checked=0)
+}
+
+function checkall() {
+  void(d=document);
+  void(el=d.getElementsByTagName('INPUT'));
+  for(i=0;i<el.length;i++)
+    void(el[i].checked=1)
+}
+
+function inserttext(text) {
+  text = ' ' + text + ' ';
+  if ( opener.document.forms['theform'].message.createTextRange && opener.document.forms['theform'].message.caretPos) {
+    var caretPos = opener.document.forms['theform'].message.caretPos;
+    caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == ' ' ? text + ' ' : text;
+  } else {
+    opener.document.forms['theform'].message.value  += text;
+  }
+  opener.document.forms['theform'].message.focus();
+}
+
+
+// done hiding -->
+</script>
+
+<style>
+img { border:1px solid black; background: white; position:absolute;}
+</style>
+<script type="text/javascript">
+<!--
+var dtop=60;
+var dleft=120;
+function roll(id) {
+  var r, ID;
+  document.getElementById(id+"result").innerHTML="";
+  randomize(id);
+  if(document.getElementById(id+"type").value != 0) {
+    r=Math.random()*Math.random()*1000;
+    ID=setInterval("rollStep1(\""+id+"\");",10+Math.random()*30);
+    setTimeout("rollStop(\""+id+"\","+ID+");",r+1000);
+  }
+}
+function rollX() {
+  var r, IDx, IDi;
+    randomize("diceX");
+    randomize("diceI");
+    r=Math.random()*Math.random()*1000;
+    IDx=setInterval("rollStep1(\"diceX\");",10+Math.random()*30);
+    setTimeout("rollStop(\"diceX\","+IDx+");",r+1000);
+    r=Math.random()*Math.random()*1000;
+    IDi=setInterval("rollStep1(\"diceI\");",10+Math.random()*30);
+    setTimeout("rollStop(\"diceI\","+IDi+");",r+1000);
+}
+
+function rollStop(id, ID) {
+  var el, pos, posn, clip, clipt, clipb, ht, i;
+  clearTimeout(ID);
+  el=document.getElementById(id);
+  posn=parseInt(el.style.top);
+  ht=new Number(el.height);
+  clipt=dtop-posn;
+  clipt=Math.floor(clipt/90)*90;
+  clipb=clipt+90;
+  posn=dtop-clipt;
+  if(clipb>ht) {
+      posn+=ht-90;
+      clipt-=ht-90;
+      clipb-=ht-90;
+    }
+    clip="rect("+clipt+"px,90px,"+clipb+"px,0)";
+    pos=posn.toFixed(0).concat("px");
+    el.style.top=pos;
+    el.style.clip=clip;
+  document.getElementById(id+"result").innerHTML=clipb/90;
+  addTotal(clipb/90);
+}
+function addTotal(n) {
+    var total, el, first,second;
+    el=document.getElementById("t");
+    first=document.getElementById("dice1result").innerHTML.substr(-1,1);
+    second=document.getElementById("dice2result").innerHTML.substr(-1,1);
+    total=first + second;
+    if(first!=second) total+= " or " + second + first;
+//  total=parseInt(el.innerHTML)+n;
+    el.innerHTML=total;
+
+    
+}
+function rollStep1(id){
+  var el, pos, posn, clip, clipt, clipb, ht, i;
+  el=document.getElementById(id);
+  posn=parseInt(el.style.top);
+  ht=new Number(el.height);
+  posn-=25;
+  clipt=dtop-posn;
+  clipb=clipt+90;
+  if(clipb>ht) {
+      posn+=ht-90;
+      clipt-=ht-90;
+      clipb-=ht-90;
+  }
+  clip="rect("+clipt+"px,90px,"+clipb+"px,0)";
+  pos=posn.toFixed(0).concat("px");
+  el.style.top=pos;
+  el.style.clip=clip;
+  tick();
+}
+function randomize(id){
+  var el, pos, posn, clip, clipt, clipb, ht;
+  el=document.getElementById(id);
+  ht=new Number(el.height);
+  posn=dtop-Math.floor(Math.random()*(ht-90));
+  clipt=dtop-posn;
+  clipb=clipt+90;
+  clip="rect("+clipt+"px,90px,"+clipb+"px,0)";
+  pos=posn.toFixed(0).concat("px");
+  el.style.top=pos;
+  el.style.clip=clip;
+}
+function rollAll() {
+  document.getElementById("t").innerHTML=" ... ";
+  roll("dice1");
+  roll("dice2");
+//  roll("dice3");
+//  roll("dice4");
+//  roll("dice5");
+//  roll("dice6");
+}
+function makeDice() {
+  var nDice, spacing, dice, html, options;
+  nDice=2;
+  html="";
+  options="<option value=\"0\">-</option>";
+  options+="<option value=\"2\">2</option>";
+  options+="<option value=\"4\">4</option>";
+  options+="<option value=\"6\">6</option>";
+  options+="<option value=\"8\">8</option>";
+  options+="<option value=\"A\" selected>10</option>";
+  options+="<option value=\"C\">12</option>";
+  options+="<option value=\"E\">20</option>";
+  options+="</select>";
+
+  spacing=(window.innerWidth-dleft)/(nDice+1);
+  for(dice=1; dice < nDice+1; dice++) {
+    html+="<img src=\"http://games.prideaux.id.au/images/dX.png\"";
+    html+=" style=\"width:90px; top:"+dtop+"px; left:";
+    html+=spacing*(dice-0.5)-45+dleft;
+    html+="px; clip:rect(0px,90px,90px,0);\"";
+    html+=" id=\"dice";
+    html+=dice;
+    html+="\"/>";
+
+    html+="<p style=\"width:90px;top:"+(dtop+125)+"px;left:";
+    html+=spacing*(dice-0.5)-45+dleft;
+    html+="px;background:green;text-align:center; position:absolute; display:none;\" id=\"dice";
+    html+=dice;
+    html+="result\"></p>";
+
+    html+="<select id=\"dice";
+    html+=dice;
+    html+="type\" onchange=\"changeDice('dice";
+    html+=dice;
+    html+="')\" style=\"width:90px;position:absolute; top:160px; left:";
+    html+=spacing*(dice-0.5)-45+dleft;
+    html+="px; display: none;\">";
+    html+=options;
+  }
+    html+="<img src=\"http://games.prideaux.id.au/images/dX.png\"";
+    html+=" style=\"width:90px; top:"+dtop+"px; left:";
+    html+=spacing*(nDice)-90+dleft;
+    html+="px; clip:rect(0px,90px,90px,0); display:none;\"";
+    html+=" id=\"diceX";
+    html+="\"/>";
+    html+="<img src=\"http://games.prideaux.id.au/images/dX.png\"";
+    html+=" style=\"width:90px; top:"+dtop+"px; left:";
+    html+=spacing*(nDice)+dleft;
+    html+="px; clip:rect(0px,90px,90px,0); display:none;\"";
+    html+=" id=\"diceI";
+    html+="\"/>";
+      
+  document.getElementById("diceDiv").innerHTML=html;
+}
+function changeDice(id) {
+    document.getElementById(id).src="http://games.prideaux.id.au/images/d"+document.getElementById(id+"type").value+".png";
+    document.getElementById(id+"result").innerHTML="";
+}
+function tick() {
+    document.musicApp.tick();
+}
+function tock() {
+    document.musicApp.tock();
+}
+function alarm() {
+    document.musicApp.alarm();
+}
+
+var ticks=0;
+var stopped=0;
+var click=20;
+var tickortock=0;
+// document.d.d2.value='0';
+function start(){
+      min=parseInt(document.m.m2.value);
+    ticks=1000*parseFloat(document.m.m2.value)-400*min+1;
+    start2();
+}
+function start2(){
+    stopped=1;
+    setTimeout("start3()",100);
+}
+function start3(){
+    stopped=0;
+    display();
+}
+function stop(){
+    stopped=1;
+      document.musicApp.hush();
+}
+function display(){
+    if(ticks>=0 && stopped==0) {
+	setTimeout("display()",100);
+	ticks-=1;
+	click+=1;
+	document.d.d2.value=(Math.floor((ticks+9)/600)+0.01* (Math.floor((ticks+9)/10)-60*Math.floor((ticks+9)/600))).toFixed(2);
+//document.d.d2.value=String.concat(":",Math.floor(ticks/10))
+	if(ticks>400){
+	  dur=10;
+	} else {
+	  dur=Math.floor(ticks/40);
+        }
+	if(click>=dur) {
+	  click=0;
+	  if(tickortock==0) {
+	    tick();
+	    tickortock=1;
+	  } else {
+	    tock();
+	    tickortock=0;
+	  }
+	}
+
+	if(ticks==0){
+	    alarm();
+	}
+    }
+}
+
+//-->
+</script>
+
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">TK757A3CJ654-387603444-1657</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">2792da33-5aaf-4c2e-985d-6f375c2e52c8</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://ststephensschool.sharepoint.com/SSSAcademic/SecondaryLearningAreas/Mathematics/_layouts/15/DocIdRedir.aspx?ID=TK757A3CJ654-387603444-1657, TK757A3CJ654-387603444-1657</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+<h1>Ten Sided Dice roller</h1>
+<applet code="TickTock.class" width=0 height=0
+NAME="musicApp" MAYSCRIPT>
+
+</applet>
+<div style="height:90px; overflow:hidden;" id="diceDiv">
+  
+</div>
+<img src="http://games.prideaux.id.au/images/dC.png" style=" width:90px;position: absolute; top: 80px; left: 90%; clip: rect(-1px,90px,1px,88px);"/>
+
+<p style="margin-top:40px;"/>&nbsp;</p>
+<h2 style="width:20em;"><span id="t">-</span></h2>
+<p><input type="BUTTON" onclick="rollAll();" value="Roll" /><!-- style="position:absolute;top:360px; left:10px;">-->
+<input type="BUTTON" onclick="rollX();" id="rollpc" value="Roll Percentile" style="position:absolute; left:80%; display:none;"></input>
+<br/></p>
+<table style="display:none;">
+<tr>
+<td><strong>Time limit:</strong></td>
+<td><form name="m">
+<input type="text" size="8" name="m2" value="0.30">
+</form>
+</td>
+<td><form name="s"><button name="s2" onclick="start()" type="button"><strong>Start</strong></button></form></td>
+</tr>
+<tr>
+<td><strong>Time remaining:</strong></td>
+<td><form name="d">
+<input type="text" size="8" name="d2">
+</form>
+</td>
+<td><button type="button" onclick="stop()"><strong>Stop</strong></button> <button type="button" onclick="start2()"><strong>Resume</strong></button></td>
+</tr>
+</table>
+
+<script type="text/javascript">
+makeDice();
+// document.getElementById("dice1type").selectedIndex=5;
+// changeDice("dice1");
+// document.getElementById("dice2type").selectedIndex=5;
+// changeDice("dice2");
+</script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Solving Linear Equations Exercises</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="Mathematics.css">
+<link rel="stylesheet" type="text/css" href="solvlin.css">
+<script type="text/javascript" src="MathematicsParser.js"></script>
+</head>
+<body>
+<main>
+<h1>Solving Linear Equations Exercises</h1>
+<p class="note">Choose a level of difficulty then press Generate. (Note that choosing Double sided makes everything one step more difficult.)</p>
+<!-- This is version 1.0  -->
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Congratulations, you&rsquo;ve got them all right!</p>
+  </div>
+
+</div>
+<div class="problems-container">
+  <div id="history"></div>
+    <div id="problems"></div>
+</div>
+<input type="radio" name="difficulty" value="1" checked="checked">Easiest</input>
+<input type="radio" name="difficulty" value="2">Medium</input>
+<input type="radio" name="difficulty" value="3">Harder</input>
+<!--input type="radio" name="difficulty" value="4">Hardest</input-->
+    <br/>
+<input type="radio" name="sided" value="1" checked="checked">Single sided</input>
+<input type="radio" name="sided" value="2">Double sided</input>
+<br/>    
+<input type="submit" onclick="prepareProblem()" value="Generate" id="generate"/>
+<!--script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script-->
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script type="text/javascript"
+  src="solvlin.js">
+</script>
+</main>
+</body>
+</html>

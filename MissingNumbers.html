@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <!--
+/* MissingNumbers.html. Generate worksheets for early number skills ...
+ * counting and skip counting, forwards or backwards, and filling in the
+ * missing numbers
+ */
+      -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missing Numbers</title>
+<link rel="stylesheet" type="text/css" href="interactive.css">
+</head>
+<body>
+<h1 id="title">Missing Numbers</h1>
+<!-- This is version 0.1 -->
+<div id="myModal" class="modal">
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p class="congrats">&#9786;&nbsp;Well done!&nbsp;&#9786;</p>
+  </div>
+</div>
+
+<div class="controls">
+<input type="radio" name="direction" value="1" checked="checked">Forward</input>
+<input type="radio" name="direction" value="-1">Backward</input>
+&nbsp;
+Skip: <input type="number" name="skip" value="1" min="1", max="10", step="1" maxlength="2"/>
+Smallest: <input type="number" name="smallest" value="1" min="1", max="999", step="1" maxlength="3"/>
+Columns: <input type="number" name="columns" value="5" min="1", max="10", step="1" maxlength="2"/>
+Rows: <input type="number" name="rows" value="10" min="1", max="20", step="1" maxlength="2"/>
+&nbsp;
+Miss <input type="number" name="gaps" value="5" min="1", max="9", step="1" maxlength="1"/> of every ten
+  &nbsp;
+<input type="radio" name="random" value="1" checked="checked">randomly</input>
+<input type="radio" name="random" value="0">regularly</input>
+  
+<input type="submit" onclick="missingNumberChart()" value="Generate"/>
+</div>
+    
+<div id="chart"></div>
+<div id="cc">Interactive worksheet by Glen Prideaux. <br />
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.
+</div>
+    
+<!-- script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script -->
+<script type="text/javascript" src="interactive.js">
+</script>
+</body>
+</html>

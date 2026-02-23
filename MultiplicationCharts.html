@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <!--
+/* We default to Multiplication Charts, but if the file is actually named
+ * AdditionCharts, we dynamically switch modes and change the title, etc. 
+ * See javascript below.
+ */
+-->
+<title>Multiplication Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="interactive.css">
+</head>
+<body>
+<h1 id="title">Multiplication Charts</h1>
+<!-- This is version 1.1 -->
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p class="congrats">Congratulations, you&rsquo;ve solved it!</p>
+  </div>
+
+</div>
+
+<div class="controls">
+<input type="radio" name="difficulty" value="1" checked="checked">Easiest</input>
+<input type="radio" name="difficulty" value="2">Medium</input>
+<input type="radio" name="difficulty" value="3">Hardest</input>
+<!-- br -->
+<input type="submit" onclick="blankChart()" value="Fill-in chart"/>
+<input type="submit" onclick="puzzle()" value="Puzzle"/>
+</div>
+
+<div id="chart">
+</div>
+
+<div id="cc">Interactive worksheet by Glen Prideaux. <br />
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.
+</div>
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script type="text/javascript" src="interactive.js">
+</script>
+<script type="text/javascript">chartMode();</script>
+</body>
+</html>

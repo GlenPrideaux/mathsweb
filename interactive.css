@@ -1,0 +1,155 @@
+td { 
+    border: solid black 1px;
+}
+td,th {
+    padding: 10pt, 13pt;
+    margin: 6pt;
+    width:84px;
+    height:20px;
+    text-align: center;
+}
+th, th input {
+    font-weight: bold;
+    background-color: rgba(128,128,128,0.3);
+}
+td.el, th {
+  position: relative;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12pt;
+}
+* {
+  box-sizing: border-box;
+}
+p.congrats {
+    font-size: 4vw;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    color: blue;
+}
+div#chart {
+    display: grid;
+    grid-gap: 0.5em;
+    justify-content: space-evenly;
+    font-size: 2vw;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+span.el {
+    min-width: 6em;
+}
+input.el, div.el, td.el, th.el, div.tableHeading {
+    font-size: 1.5vw;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    width: 3.5vw;
+    height: 2.5vw;
+}
+.el.algebra input.el {
+    width: 6vw;
+}
+input.el {
+    background-color: rgba(255,255,255,0);
+    border-style: hidden;
+}
+table, tr { height: 100%; }
+tr.focus, col.focus  {
+  background-color: rgba(255,255,160,0.5);
+}
+td.focus {
+    position:relative;
+}
+
+input.el, span.el {
+    color: rgb(0,0,16);
+}
+input.good,span.good {
+    background: rgb(128,255,128);
+}
+input.bad,span.bad {
+    background: rgb(255,128,128);
+}
+
+.tableHeading {
+    background-color: rgb(192,255,255);
+    font-weight: bold;
+    color: blue;
+    width: 100%;
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100vw; /* Full width */
+    height: 100vh; /* Full height */
+    /* overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+div.modal-content {
+    background-color: #fefefe;
+    /* margin: auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 25px;
+    width: 80%; /* Could be more or less, depending on screen size */
+    position: fixed; /* stay in place */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+.printOnly
+{
+    display: none;
+}
+
+div.controls {
+    margin-bottom:18pt;
+    padding: 3pt;
+    color: black;
+    background-color: silver;
+    padding-left: 10vw;
+    padding-right: 10vw;
+}
+div#cc
+{
+    margin-top:36pt;
+    padding: 3pt;
+    color: black;
+    background-color: silver;
+    text-align: center;
+    font-size: 85%;
+}
+@media print
+{    
+    .printOnly
+    {
+	display: initial !important;
+    }
+    .screenOnly, div#cc, h1#title, div.controls
+    {
+	display: none !important;
+    }
+}

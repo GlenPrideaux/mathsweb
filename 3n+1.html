@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+<title>3n+1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>  
+<script type="text/javascript">
+function go() {
+    var start, count, op, values, theChart;
+    start = document.getElementById("start").value;
+    [op, count, values]=run(start);
+    document.getElementById("output").innerHTML = op;
+    document.getElementById("count").innerHTML = count+" steps before getting to 1";
+    
+    theChart=chartIt(values,start);
+}
+function run(start) {
+    var start, count, op, prev, values;
+    op="";
+    count=-1;
+    values=[];
+    do{
+	if(count>=0) {
+	    op=op+"&rarr; "
+	}
+	op=op+start;
+	values.push({x:count+1,y:start});
+	prev=start;
+	start=next(start);
+	count++;
+    } while (prev!=1);
+    return [op, count, values];
+}
+function next(prev){
+    if((prev % 2)==0) return prev/2;
+    return 3*prev+1;
+}
+
+// do a quick count by stopping when we reach a number we've already done, assuming that all numbers less than
+// start have already been done.
+function countSteps(start, counts) {
+    var count=0;
+    var x=start;
+    if(start==1) return 0;
+    for(;;){
+	if(x<start) return count+counts[x];
+	count++;
+	x=next(x);
+    }
+}
+
+function chartIt(values, start) {
+    var ctx = document.getElementById("myChart").getContext('2d');
+
+    if(typeof chartIt.myChart===typeof undefined) {
+	    chartIt.myChart= new Chart(ctx, {
+		type: 'line',
+		data: {
+		    datasets: [{
+			label: '3n+1 Trajectory Starting From '+start,
+			data: values,
+			backgroundColor: 'rgba(255, 99, 132, 0.0)',
+			borderColor: 'rgba(255,99,132,1)',
+			borderWidth: 1,
+			lineTension: 0
+		    }]
+		},
+		options: {
+		    maintainAspectRatio: false,
+		    responsive: false,
+		    scales: {
+			yAxes: [{
+			    ticks: {
+				beginAtZero:true
+			    },
+			    scaleLabel: {display: true,
+					 labelString: 'Value'}
+			}],
+			xAxes: [{
+			    type: 'linear',
+			    position: 'bottom',
+			    scaleLabel: {display: true,
+					 labelString: 'Step'}
+			}]
+		    }
+		}
+	    });
+    } else {
+	n=chartIt.myChart.data.datasets[0].data.length;
+	if(n>0) { chartIt.myChart.data.datasets[0].data.splice(0,n); }
+	while(values.length) {
+	    chartIt.myChart.data.datasets[0].data.push(values.shift());
+	}
+	chartIt.myChart.update();
+    }
+    return chartIt.myChart;
+}
+function chartThem(values, start) {
+    var ctx = document.getElementById("nChart").getContext('2d');
+
+    if(typeof chartThem.myChart===typeof undefined) {
+	    chartThem.myChart= new Chart(ctx, {
+		type: 'line',
+		data: {
+		    datasets: [{
+			label: '3n+1 Trajectory Length by Starting Number',
+			data: values,
+			backgroundColor: 'rgba(255, 99, 132, 0.0)',
+			borderColor: 'rgba(255,99,132,1)',
+			borderWidth: 1,
+			lineTension: 0,
+			showLine: false
+		    }]
+		},
+		options: {
+		    maintainAspectRatio: false,
+		    responsive: false,
+		    elements: {
+			point: { radius: 1 }
+		    },
+		    scales: {
+			yAxes: [{
+			    ticks: {
+				beginAtZero:true
+			    },
+			    scaleLabel: {display: true,
+					 labelString: 'Trajectory Length'}
+			}],
+			xAxes: [{
+			    type: 'linear',
+			    position: 'bottom',
+			    scaleLabel: {display: true,
+					 labelString: 'Starting Number'}
+			}]
+		    }
+		}
+	    });
+    } else {
+	n=chartThem.myChart.data.datasets[0].data.length;
+	if(n>0) { chartThem.myChart.data.datasets[0].data.splice(0,n); }
+	while(values.length) {
+	    chartThem.myChart.data.datasets[0].data.push(values.shift());
+	}
+	chartThem.myChart.update();
+    }
+    return chartThem.myChart;
+}
+
+// tabulate the first 1000 numbers in 20 pairs of columns
+function tabulate() {
+    var opA, opB, count, discard, startB;
+    var width, height;
+    var maxno, maxcount;
+    var values=[]; // {x,y} pairs for plotting
+    var counts=[0];
+    maxno=0; maxcount=0;
+    width = 20;
+    height=50;
+    limit=1000000;
+    for(start=1; start<=limit; start++) {
+	count=countSteps(start,counts);
+	values.push({x:start,y:count});
+	counts[start]=count;
+	if(count>maxcount) {
+	    maxno=start;
+	    maxcount=count;
+	}
+    }
+    opA="<table>";
+    for(col=0; col<width; col++) {
+	opA+="<colgroup><col style=\"background-color: silver\"><col></colgroup>";
+    }
+    opA+="<thead><tr>";
+    for(col=0; col<width; col++) {
+	opA+="<th>No.</th><th>Count</th>";
+    }
+    opA+="</tr></thead><tbody>";
+    opB="</tbody></table>"
+
+    for(start=1; start<height+1; start++){
+	opA+="<tr>";
+	startA=start;
+	for(col=0; col<width; col++) {
+	    count=counts[startA];
+	    opA+="<td>"+startA+"</td><td>"+count+"</td>";
+	    startA+=height;
+	}
+	opA+="</tr>";
+    }
+    document.getElementById("optable").innerHTML = opA+opB;
+    document.getElementById("maxcount").innerHTML = "A maximum of "+maxcount+" steps before getting to 1 was found, with the starting number being "+maxno+".";
+    chartThem(values);
+}
+</script>
+</head>
+<body>
+<h1>3n+1</h1>
+<p><input type="number" id="start" min="1"></input> <button onclick="go()">Go</button></p>
+<p id="output" style="word-spacing: -.2em;"></p>
+<p id="count"></p>
+<canvas id="myChart" width="800pt" height="400pt"></canvas>
+
+
+<script>
+</script>
+
+
+    <p><button onclick="tabulate()">Tabulate</button></p>
+    <div id="optable"></div>
+    <p id="maxcount"></p>
+    <canvas id="nChart" width="800pt" height="400pt"></canvas>
+</body>
+</html>

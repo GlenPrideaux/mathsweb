@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html> <head>
+<title>Pirate Game Random Sheet Generator</title>
+<script src="pirate-randomizer.js"></script>
+  <style>
+  table#pirateTable {
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  table#pirateTable th, table#pirateTable td {
+      width: 48px;
+      height: 48px;
+      text-align: center;
+  }
+  table#pirateTable td {
+      border: 1px solid black;
+      position: relative;
+      align-items: center;
+      justify-content: center;
+  }
+  img.icon {
+      max-width: 46px;
+      max-height: 46px;
+      object-fit: cover;
+      margin:0;   
+  }
+  table#trackingTable {
+    border-collapse: separate;
+    margin: 20px 30px;
+  }
+  
+  table#trackingTable td {
+      width: 124px;
+      height: 94px;
+      text-align: center;
+      border: 1px solid black;
+  }
+  img#ship {
+      opacity:1;
+      max-width:260px;
+  }
+  @media print {
+      /* Adjust margins to fit content to one page */
+      @page {
+	  size: auto; /* Use auto for size to let the content decide */
+	  margin: 10mm; /* Adjust margin size to avoid clipping */
+      }
+
+      body {
+	  width: 100%; /* Use full width */
+	  height: auto; /* Ensure dynamic height based on content */
+      }
+
+      html, body {
+	  overflow: visible; /* Ensure all content is visible */
+	  page-break-inside: avoid; /* Avoid breaking content across pages */
+      }
+
+      * {
+	  page-break-inside: avoid; /* Avoid breaking elements across pages */
+	  page-break-after: auto;
+      }
+  }
+
+  </style>
+  </head>
+
+<body>
+<h1>Pirate Game Sheet</h1>
+<div style="display: flex; flex-direction: row;">
+  <div>
+    <table id="pirateTable">
+      <thead>
+        <tr>
+          <th></th>
+          <th>A</th>
+          <th>B</th>
+          <th>C</th>
+          <th>D</th>
+          <th>E</th>
+          <th>F</th>
+          <th>G</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows and columns are dynamically generated -->
+      </tbody>
+    </table>
+    <table id="trackingTable">
+      <thead>
+	<tr>
+	  <th>Shield</th>
+	  <th>Mirror</th>
+	  <th>Bank</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td></td>
+	  <td></td>
+	  <td></td>
+	</tr>
+      </tbody>
+      </table>
+    <h2>CASH</h2>
+  </div>
+  <div style="margin-left: 20px;">
+    <h3>Key</h3>
+    <div id="key">
+      <table id="keyTable">
+	<tbody>
+	</tbody>
+      </table>
+      <img id="ship" src="pirate/pirateship.png" ></img>
+    </div>
+  </div>
+</div>
+
+</body> </html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html> <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="squares.css">
+<title>Multiplication Squares</title>
+
+<script>
+// specify the operation, and the number which is an identity with
+// this operation (0 for addition, 1 for multiplication, etc.).
+const operate = function(a,b) { return a*b; };
+const identity = 1;
+</script>
+<script src="squares.js"></script>
+</head>
+
+<body ondrop="bodydrop(event)" ondragover="allowDrop(event)">
+<div>
+<h1>Multiplication Squares</h1>
+
+<table id="maintable">
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="total"></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="total"></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="total"></td>
+  </tr>
+  <tr class="total">
+    <td></td><td></td><td></td><td class="total"></td>
+  </tr>
+</table>
+<hr>
+<div id="bin"  ondrop="drop(event)" ondragover="allowDrop(event)">
+</div>
+
+<hr>
+<p>Reload for a new puzzle.</p>
+<!-- hhmts start -->Last modified: Thu Nov 24 09:45:46 AWST 2022 <!-- hhmts end -->
+</div>
+</body> </html>
+
